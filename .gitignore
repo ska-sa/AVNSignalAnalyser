@@ -1,0 +1,5 @@
+AVNSignalAnalyser.pro.*
+AVNSignalAnalyser
+AVNSignalAnalyser.exe
+*.o
+*.moc

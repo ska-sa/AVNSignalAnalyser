@@ -14,33 +14,32 @@ TEMPLATE = app
 
 SOURCES +=\
         MainWindow.cpp \
-    WaterfallPlotDockWidget.cpp \
-    FFTPlotDockWidget.cpp \
-    IntegratedBandwidthTimeDockWidget.cpp \
     Main.cpp \
-    PlotDockWidgetBase.cpp \
     NetworkGroupBox.cpp \
-    AVNAppLibs/SocketStreamers/WBSpectrometerUDPStreamer/WBSpectrometerUDPStreamer.cpp \
-    AVNUtilLibs/Socket/InterruptableBlockingUDPSocket/InterruptableBlockingUDPSocket.cpp
+    AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.cpp \
+    AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.cpp \
+    QwtLinePlotWidget.cpp \
+    QwtWaterfallPlotWidget.cpp \
+    PlotsWidget.cpp \
+    QwtLinePlotPicker.cpp
 
 
 HEADERS  += MainWindow.h \
-    WaterfallPlotDockWidget.h \
-    FFTPlotDockWidget.h \
-    IntegratedBandwidthTimeDockWidget.h \
-    PlotDockWidgetBase.h \
     NetworkGroupBox.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
-    AVNAppLibs/SocketStreamers/WBSpectrometerUDPStreamer/WBSpectrometerUDPStreamer.h \
-    AVNUtilLibs/Socket/InterruptableBlockingUDPSocket/InterruptableBlockingUDPSocket.h
+    AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.h \
+    AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.h \
+    QwtLinePlotWidget.h \
+    QwtWaterfallPlotWidget.h \
+    PlotsWidget.h \
+    QwtLinePlotPicker.h
 
 
 FORMS    += MainWindow.ui \
-    WaterfallPlotDockWidget.ui \
-    FFTPlotDockWidget.ui \
-    IntegratedBandwidthTimeDockWidget.ui \
-    PlotDockWidgetBase.ui \
-    NetworkGroupBox.ui
+    NetworkGroupBox.ui \
+    QwtWaterfallPlotWidget.ui \
+    QwtLinePlotWidget.ui \
+    PlotsWidget.ui
 
 RESOURCES += \
     Images.qrc

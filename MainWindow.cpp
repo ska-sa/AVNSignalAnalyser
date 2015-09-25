@@ -2,68 +2,39 @@
 #include <iostream>
 
 //Library includes
+#include <QThread>
 
 //Local includes
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-
-#include "FFTPlotDockWidget.h"
-#include "IntegratedBandwidthTimeDockWidget.h"
-#include "WaterfallPlotDockWidget.h"
 
 using namespace std;
 
 cMainWindow::cMainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_pUI(new Ui::cMainWindow),
-    m_pNetworkGroupBox(new cNetworkGroupBox)
+    m_pNetworkGroupBox(new cNetworkGroupBox(true, false)), //No UDP currently
+    m_pPlotsWidget(new cPlotsWidget)
 {
-    setDockNestingEnabled(true); //Required because we have potentially lots of docking widgets
     m_pUI->setupUi(this);
     m_pUI->horizontalLayout_MainWindowTop->insertWidget(3, m_pNetworkGroupBox);
+    m_pUI->verticalLayout_mainWindow->insertWidget(1, m_pPlotsWidget);
 
-    //Add initial widgets
-    addPlot(cPlotDockWidgetBase::WATER_FALL);
-    addPlot(cPlotDockWidgetBase::FFT);
+    connectSignalsToSlots();
+
+    cout << "cMainWindow::cMainWindow() Thread is: " << QThread::currentThread() << endl;
 }
 
 cMainWindow::~cMainWindow()
 {
     delete m_pUI;
-
-    //Delete all plot widgets
-    for(int i = 0; i < m_qvPlotWidgets.size(); i++)
-    {
-        delete m_qvPlotWidgets[i];
-    }
 }
 
-void cMainWindow::addPlot(cPlotDockWidgetBase::WidgetType eWidgetType)
+void cMainWindow::connectSignalsToSlots()
 {
-    cPlotDockWidgetBase* pNewWidget = NULL;
-
-    switch(eWidgetType)
-    {
-    case cPlotDockWidgetBase::FFT:
-        pNewWidget = new cFFTPlotDockWidget;
-        break;
-
-    case cPlotDockWidgetBase::WATER_FALL:
-        pNewWidget = new cWaterfallPlotDockWidget;
-        break;
-
-    case cPlotDockWidgetBase::INTEGRATED_BANDWIDTH:
-        pNewWidget = new cIntegratedBandwidthTimeDockWidget;
-        break;
-
-    default:
-        cout << "Warning unknown widget type requested. Returning." << endl;
-        return;
-    }
-
-    m_qvPlotWidgets.push_back(pNewWidget);
-
-    m_pUI->verticalLayout_mainWindow->insertWidget(m_pUI->verticalLayout_mainWindow->count() - 1, pNewWidget);
+    QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectClicked(QString,unsigned short)), m_pPlotsWidget, SLOT(slotConnect(QString,unsigned short)) );
+    QObject::connect( m_pNetworkGroupBox, SIGNAL(sigDisconnectClicked()), m_pPlotsWidget, SLOT(slotDisconnect()) );
+    QObject::connect( m_pNetworkGroupBox, SIGNAL(sigPausePlots(bool)), m_pPlotsWidget, SLOT(slotPausePlots(bool)) );
+    QObject::connect( m_pPlotsWidget, SIGNAL(sigConnected(bool)), m_pNetworkGroupBox, SLOT(slotSetConnectedOrBound(bool)) );
 
 }
-

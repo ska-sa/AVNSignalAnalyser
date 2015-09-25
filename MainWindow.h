@@ -8,8 +8,9 @@
 #include <QVector>
 
 //Local includes
-#include "PlotDockWidgetBase.h"
+#include "QwtLinePlotWidget.h"
 #include "NetworkGroupBox.h"
+#include "PlotsWidget.h"
 
 namespace Ui {
 class cMainWindow;
@@ -26,10 +27,9 @@ public:
 private:
     Ui::cMainWindow                 *m_pUI;
     cNetworkGroupBox                *m_pNetworkGroupBox;
+    cPlotsWidget                    *m_pPlotsWidget;
 
-    QVector<cPlotDockWidgetBase*>    m_qvPlotWidgets;
-
-    void addPlot(cPlotDockWidgetBase::WidgetType eWidgetType);
+    void                            connectSignalsToSlots();
 };
 
 #endif // MAINWINDOW_H

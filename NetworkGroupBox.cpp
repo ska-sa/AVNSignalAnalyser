@@ -7,11 +7,13 @@
 #include "NetworkGroupBox.h"
 #include "ui_NetworkGroupBox.h"
 
-cNetworkGroupBox::cNetworkGroupBox(QWidget *parent) :
+cNetworkGroupBox::cNetworkGroupBox(bool bTCPEnabled, bool bUDPEnabled, QWidget *parent) :
     QGroupBox(parent),
     m_pUI(new Ui::cNetworkGroupBox),
     m_bIsConnectedOrBound(false),
-    m_bIsPaused(false)
+    m_bIsPaused(false),
+    m_bTCPIsEnabled(bTCPEnabled),
+    m_bUDPIsEnabled(bUDPEnabled)
 {
     m_pUI->setupUi(this);
 
@@ -19,6 +21,7 @@ cNetworkGroupBox::cNetworkGroupBox(QWidget *parent) :
 
     connectSignalsToSlots();
 
+    updateAvailableProtocols();
     updateGUI();
 }
 
@@ -42,6 +45,14 @@ void cNetworkGroupBox::slotSetNetworkProtocol(int iNetworkProtocol)
 
 void cNetworkGroupBox::slotConnectDisconnect()
 {
+    if(m_bIsConnectedOrBound)
+    {
+        sigDisconnectClicked();
+    }
+    else
+    {
+        sigConnectClicked(m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_port->value());
+    }
 }
 
 void cNetworkGroupBox::slotPauseResumePlots()
@@ -49,6 +60,8 @@ void cNetworkGroupBox::slotPauseResumePlots()
     m_bIsPaused = !m_bIsPaused;
 
     updateGUI();
+
+    sigPausePlots(m_bIsPaused);
 }
 
 void cNetworkGroupBox::slotSetConnectedOrBound(bool bIsConnectedOrBound)
@@ -60,7 +73,7 @@ void cNetworkGroupBox::slotSetConnectedOrBound(bool bIsConnectedOrBound)
 
 void cNetworkGroupBox::updateGUI()
 {
-    if(m_pUI->comboBox_networkProtocol->currentIndex() == TCP)
+    if(m_pUI->comboBox_networkProtocol->currentText() == QString("TCP"))
     {
         if(m_bIsConnectedOrBound)
         {
@@ -96,5 +109,32 @@ void cNetworkGroupBox::updateGUI()
     else
     {
         m_pUI->pushButton_pauseResume->setText("Pause Plots");
+    }
+}
+
+void cNetworkGroupBox::setTCPEnabled(bool bEnabled)
+{
+    m_bTCPIsEnabled = bEnabled;
+    updateAvailableProtocols();
+}
+
+void cNetworkGroupBox::setUDPEnabled(bool bEnabled)
+{
+    m_bUDPIsEnabled = bEnabled;
+    updateAvailableProtocols();
+}
+
+void cNetworkGroupBox::updateAvailableProtocols()
+{
+    m_pUI->comboBox_networkProtocol->clear();
+
+    if(m_bTCPIsEnabled)
+    {
+        m_pUI->comboBox_networkProtocol->addItem(QString("TCP"));
+    }
+
+    if(m_bUDPIsEnabled)
+    {
+        m_pUI->comboBox_networkProtocol->addItem(QString("UDP"));
     }
 }

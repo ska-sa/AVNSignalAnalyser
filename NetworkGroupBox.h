@@ -18,8 +18,11 @@ public:
         UDP
     };
 
-    explicit cNetworkGroupBox(QWidget *parent = 0);
+    explicit cNetworkGroupBox(bool bTCPEnabled = true, bool bUDPEnabled = true, QWidget *parent = 0);
     ~cNetworkGroupBox();
+
+    void                    setTCPEnabled(bool bEnabled);
+    void                    setUDPEnabled(bool bEnabled);
 
 private:
     Ui::cNetworkGroupBox    *m_pUI;
@@ -27,8 +30,11 @@ private:
     NetworkProtocol         m_eNetworkProtocol;
     bool                    m_bIsConnectedOrBound;
     bool                    m_bIsPaused;
+    bool                    m_bTCPIsEnabled;
+    bool                    m_bUDPIsEnabled;
 
     void                    connectSignalsToSlots();
+    void                    updateAvailableProtocols();
     void                    updateGUI();
 
 private slots:
@@ -38,6 +44,11 @@ private slots:
 
 public slots:
     void                    slotSetConnectedOrBound(bool bIsConnectedOrBound);
+
+signals:
+    void                    sigConnectClicked(QString qstrPeerAddress, unsigned short usPort);
+    void                    sigDisconnectClicked();
+    void                    sigPausePlots(bool bPause);
 };
 
 #endif // NETWORKGROUPBOX_H

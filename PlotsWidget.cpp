@@ -8,18 +8,32 @@
 #include "PlotsWidget.h"
 #include "ui_PlotsWidget.h"
 
+#include "AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h"
+
 using namespace std;
 
 cPlotsWidget::cPlotsWidget(QWidget *parent) :
     QWidget(parent),
     m_pUI(new Ui::cPlotsWidget),
-    m_pPowerPlotWidget(new cQwtLinePlotWidget),
-    m_pStokesPlotWidget(new cQwtLinePlotWidget)
+    m_pPowerPlotWidget(new cFramedQwtLinePlotWidget(this)),
+    m_pStokesPlotWidget(new cFramedQwtLinePlotWidget(this)),
+    m_pBandPowerPlotWidget(new cBandPowerQwtLinePlot(this)),
+    m_bPowerEnabled(true),
+    m_bStokesEnabled(true),
+    m_bBandPowerEnabled(true)
 {
     m_pUI->setupUi(this);
 
     m_pUI->horizontalLayout_powers->insertWidget(0, m_pPowerPlotWidget);
     m_pUI->horizontalLayout_stokes->insertWidget(0, m_pStokesPlotWidget);
+    m_pUI->horizontalLayout_bandPower->insertWidget(0, m_pBandPowerPlotWidget);
+
+    m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1, QString("s"));
+
+    QObject::connect(m_pUI->groupBox_powers, SIGNAL(clicked(bool)), this, SLOT(slotPowerWidgetEnabled(bool)));
+    QObject::connect(m_pUI->groupBox_stokes, SIGNAL(clicked(bool)), this, SLOT(slotStokesWidgetEnabled(bool)));
+    QObject::connect(m_pUI->groupBox_bandPower, SIGNAL(clicked(bool)), this, SLOT(slotBandPowerWidgetEnabled(bool)));
+    QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pPowerPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
 }
 
 cPlotsWidget::~cPlotsWidget()
@@ -80,14 +94,14 @@ void cPlotsWidget::slotResumePlots()
 
 bool cPlotsWidget::isRunning()
 {
-    QReadLocker oReadLock(&m_oIsRunningMutex);
+    QReadLocker oReadLock(&m_oMutex);
 
     return m_bIsRunning;
 }
 
 void cPlotsWidget::setIsRunning(bool bIsRunning)
 {
-    QWriteLocker oWriteLock(&m_oIsRunningMutex);
+    QWriteLocker oWriteLock(&m_oMutex);
 
     m_bIsRunning = bIsRunning;
 }
@@ -105,9 +119,11 @@ void cPlotsWidget::getDataThreadFunction()
     uint8_t u8CurrentNPacketsPerFrame = 0;
     uint8_t u8CurrentPacketIndex = 0;
     uint16_t u16PlotType = 0xffff;
+    int64_t i64LastUsedTimestamp_us = 0;
 
     int64_t i64Timestamp_us = 0;
 
+    bool bSkipFrame = false;
     bool bResync = false;
 
     QVector<char> qvcPacket;
@@ -161,10 +177,10 @@ void cPlotsWidget::getDataThreadFunction()
                 continue;
             }
 #else
-            if( __builtin_bswap32( *(uint32_t*)qvcPacket.constData() ) != SYNC_WORD)
+            if( __builtin_bswap32( *(uint32_t*)qvcPacket.constData() ) != AVN::Spectrometer::SYNC_WORD)
             {
                 cout << "cPlotsWidget::getDataThreadFunction(): Warning got wrong magic no: "
-                     << std::hex << __builtin_bswap32( *(uint32_t*)qvcPacket.constData() ) << ". Expected " << SYNC_WORD << std::dec << endl;
+                     << std::hex << __builtin_bswap32( *(uint32_t*)qvcPacket.constData() ) << ". Expected " << AVN::Spectrometer::SYNC_WORD << std::dec << endl;
 
                 continue;
             }
@@ -180,7 +196,7 @@ void cPlotsWidget::getDataThreadFunction()
 
         //Set the number of packets per FFT frame, number of bins per packet and total number of bins per frame
         u8NPacketsPerFrame = u8CurrentNPacketsPerFrame;
-        u32NSamplesPerPacket = (i32NextPacketSize_B - HEADER_SIZE_B) / sizeof(int32_t);
+        u32NSamplesPerPacket = (i32NextPacketSize_B - AVN::Spectrometer::HEADER_SIZE_B) / sizeof(int32_t);
         u32NSamplesPerFrame = u32NSamplesPerPacket * u8NPacketsPerFrame;
 
         //Resize plot vectors as necessary
@@ -235,6 +251,23 @@ void cPlotsWidget::getDataThreadFunction()
                         return;
                 }
 
+                //Get timestamp on the first subframe
+                if(!u8ExpectedPacketIndex)
+                {
+#ifdef _WIN32
+                    i64Timestamp_us = _byteswap_uint64( *(int64_t*)(qvcPacket.constData() + 4) );
+#else
+                    i64Timestamp_us = __builtin_bswap64( *(int64_t*)(qvcPacket.constData() + 4) );
+#endif
+                    //cout << "Got packet with timestamp " << i64Timestamp_us << endl;
+
+                    //Attempt to reach 30 frames per second.
+                    bSkipFrame = (i64Timestamp_us - i64LastUsedTimestamp_us) < 33333;
+                }
+
+                if(bSkipFrame)
+                    continue;
+
                 //Some more consistency checks
                 u8CurrentPacketIndex = *(uint8_t*)(qvcPacket.constData() + 12);
                 u8CurrentNPacketsPerFrame = *(uint8_t*)(qvcPacket.constData() + 13);
@@ -257,9 +290,9 @@ void cPlotsWidget::getDataThreadFunction()
                     break;
                 }
 
-                if((plotType)u16PlotType != m_ePlotType)
+                if(u16PlotType != m_u16PlotType)
                 {
-                    cout << "Expected plot type " << m_ePlotType << " , got " << u16PlotType << ". Resynchronising." << endl;
+                    cout << "Expected plot type " << m_u16PlotType << " , got " << u16PlotType << ". Resynchronising." << endl;
                     bResync = true;
                     break;
                 }
@@ -282,22 +315,30 @@ void cPlotsWidget::getDataThreadFunction()
 #endif
                 }
 
-                //Get timestamp on the first subframe
-                if(!u8ExpectedPacketIndex)
-                {
-#ifdef _WIN32
-                    i64Timestamp_us = _byteswap_uint64( *(int64_t*)(qvcPacket.constData() + 4) );
-#else
-                    i64Timestamp_us = __builtin_bswap64( *(int64_t*)(qvcPacket.constData() + 4) );
-#endif
-                    //cout << "Got packet with timestamp " << i64Timestamp_us << endl;
-                }
             }
 
-            if(!bResync)
+            if(!bResync && !bSkipFrame)
             {
-                m_pPowerPlotWidget->addData(qvvfPowerLR, i64Timestamp_us);
-                m_pStokesPlotWidget->addData(qvvfStokesQU, i64Timestamp_us);
+                {
+                    QReadLocker oLock(&m_oMutex);
+
+                    if(m_bPowerEnabled)
+                    {
+                        m_pPowerPlotWidget->addData(qvvfPowerLR, i64Timestamp_us);
+                    }
+
+                    if(m_bStokesEnabled)
+                    {
+                        m_pStokesPlotWidget->addData(qvvfStokesQU, i64Timestamp_us);
+                    }
+
+                    if(m_bBandPowerEnabled)
+                    {
+                        m_pBandPowerPlotWidget->addData(qvvfPowerLR, i64Timestamp_us);
+                    }
+                }
+
+                i64LastUsedTimestamp_us = i64Timestamp_us;
             }
         }
     }
@@ -309,7 +350,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     u16PlotType = 0b0000000000001111 & u16PlotType;
 
     //If the plot is the same do nothing
-    if(m_ePlotType == (plotType)u16PlotType)
+    if(m_u16PlotType == u16PlotType)
         return;
 
     cout << "--- Plot type " << u16PlotType << endl;
@@ -317,123 +358,240 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     //Otherwise update
     switch(u16PlotType)
     {
-    case WB_SPECTROMETER_LRQU:
-        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - Left and Right Power"));
+    case AVN::Spectrometer::WB_SPECTROMETER_LRQU:
+    {
+        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - L and R Circular Polarisation"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
         m_pPowerPlotWidget->setXUnit(QString("MHz"));
+        QVector<QString> qvqstrCurveNames;
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setTitle(QString("WB Spectrometer - Stokes Q and U"));
         m_pStokesPlotWidget->setYLabel(QString("Power"));
         m_pStokesPlotWidget->setYUnit(QString(""));
         m_pStokesPlotWidget->setXLabel(QString("Frequency"));
         m_pStokesPlotWidget->setXUnit(QString("MHz"));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("Stokes Q"));
+        qvqstrCurveNames.push_back(QString("Stokes U"));
+        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
+        m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setXUnit(QString(""));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
+        m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, 1024, QString("MHz")); //Todo, find a good way to determine the number of bins implicity
 
 
         m_pPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPlotWidget->enableRejectData(false);
+        m_pBandPowerPlotWidget->enableRejectData(false);
 
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Wideband Spectrometer LRQU" << endl;
         break;
+    }
 
-    case WB_SPECTROMETER_CFFT:
-        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - Left and Right Power"));
+    case AVN::Spectrometer::WB_SPECTROMETER_CFFT:
+    {
+        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - L and R Circular Polarisation"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
         m_pPowerPlotWidget->setXUnit(QString("MHz"));
+        QVector<QString> qvqstrCurveNames;
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setTitle(QString("WB Spectrometer - Relative Phase"));
         m_pStokesPlotWidget->setYLabel(QString("Relative Phase"));
         m_pStokesPlotWidget->setYUnit(QString("rad"));
         m_pStokesPlotWidget->setXLabel(QString("Frequency"));
         m_pStokesPlotWidget->setXUnit(QString("MHz"));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("Relative Phase"));
+        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
+        m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setXUnit(QString(""));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
+        m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, 1024, QString("MHz")); //Todo, find a good way to determine the number of bins implicity
 
         m_pPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPlotWidget->enableRejectData(false);
-
+        m_pBandPowerPlotWidget->enableRejectData(false);
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Wideband Spectrometer complex FFT data" << endl;
         break;
+    }
 
-    case NB_SPECTROMETER_LRQU:
-        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - Left and Right Power"));
+    case AVN::Spectrometer::NB_SPECTROMETER_LRQU:
+    {
+        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - L and R Circular Polarisation"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
         m_pPowerPlotWidget->setXUnit(QString("Hz"));
+        QVector<QString> qvqstrCurveNames;
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setTitle(QString("NB Spectrometer - Stokes Q and U"));
-        m_pStokesPlotWidget->setYLabel(QString("Power"));
+        m_pStokesPlotWidget->setYLabel(QString("Relative Power"));
         m_pStokesPlotWidget->setYUnit(QString(""));
         m_pStokesPlotWidget->setXLabel(QString("Frequency"));
         m_pStokesPlotWidget->setXUnit(QString("Hz"));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("Stokes Q"));
+        qvqstrCurveNames.push_back(QString("Stokes U"));
+        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
+        m_pBandPowerPlotWidget->setYUnit(QString("dB/Hz"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setXUnit(QString(""));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
+        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 1024, QString("Hz")); //Todo, find a good way to determine the number of bins implicity
 
         m_pPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPlotWidget->enableRejectData(false);
+        m_pBandPowerPlotWidget->enableRejectData(false);
 
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Narrowband Spectrometer LRQU" << endl;
         break;
+    }
 
-    case NB_SPECTROMETER_CFFT:
-        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - Left and Right Power"));
+    case AVN::Spectrometer::NB_SPECTROMETER_CFFT:
+    {
+        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - L and R Circular Polarisation"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
         m_pPowerPlotWidget->setXUnit(QString("Hz"));
+        QVector<QString> qvqstrCurveNames;
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setTitle(QString("NB Spectrometer - Relative Phase"));
         m_pStokesPlotWidget->setYLabel(QString("Relative Phase"));
         m_pStokesPlotWidget->setYUnit(QString("rad"));
         m_pStokesPlotWidget->setXLabel(QString("Frequency"));
         m_pStokesPlotWidget->setXUnit(QString("Hz"));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("Relative Phase"));
+        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
+        m_pBandPowerPlotWidget->setYUnit(QString("dB/Hz"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setXUnit(QString(""));
+        qvqstrCurveNames.clear();
+        qvqstrCurveNames.push_back(QString("LCP"));
+        qvqstrCurveNames.push_back(QString("RCP"));
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(-781.25,781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
+        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 1024, QString("Hz")); //Todo, find a good way to determine the number of bins implicity
 
         m_pPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPlotWidget->enableRejectData(false);
-
+        m_pBandPowerPlotWidget->enableRejectData(false);
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Narrowband Spectrometer complex FFT data" << endl;
-        break;
-
-    case TIME_DATA:
-        //TODO: Reject until implemented
-        m_pPowerPlotWidget->enableRejectData(true);
-        m_pStokesPlotWidget->enableRejectData(true);
-
-        cout << "cPlotsWidget::updatePlotType(): Setup plotting for Time data" << endl;
-        break;
-
-    default:
-        m_pPowerPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
-        m_pStokesPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
-
-        m_pPowerPlotWidget->enableRejectData(true);
-        m_pStokesPlotWidget->enableRejectData(true);
-
-        cout << "cPlotsWidget::updatePlotType(): Warning got unknown plot type " << u16PlotType << ". Will not plot data" << endl;
-
         break;
     }
 
+
+    default:
+    {
+        m_pPowerPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
+        m_pStokesPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
+        m_pBandPowerPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
+
+        QVector<QString> qvqstrCurveNames;
+        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
+
+        m_pPowerPlotWidget->enableRejectData(true);
+        m_pStokesPlotWidget->enableRejectData(true);
+        m_pBandPowerPlotWidget->enableRejectData(true);
+
+        cout << "cPlotsWidget::updatePlotType(): Warning got unknown plot type " << u16PlotType << ". Will not plot data" << endl;
+        break;
+    }
+
+    }
+
     //Store the current plot type
-    m_ePlotType = (plotType)u16PlotType;
+    m_u16PlotType = u16PlotType;
+}
+
+void cPlotsWidget::slotPowerWidgetEnabled(bool bEnabled)
+{
+    m_pPowerPlotWidget->setVisible(bEnabled);
+
+    QWriteLocker oLock(&m_oMutex);
+    m_bPowerEnabled = bEnabled;
+}
+
+void cPlotsWidget::slotStokesWidgetEnabled(bool bEnabled)
+{
+    m_pStokesPlotWidget->setVisible(bEnabled);
+
+    QWriteLocker oLock(&m_oMutex);
+    m_bStokesEnabled = bEnabled;
+}
+
+void cPlotsWidget::slotBandPowerWidgetEnabled(bool bEnabled)
+{
+    m_pBandPowerPlotWidget->setVisible(bEnabled);
+
+    QWriteLocker oLock(&m_oMutex);
+    m_bBandPowerEnabled = bEnabled;
+
+    //Remove band lines from the power plot while the band power power is hidden
+    m_pPowerPlotWidget->slotShowVerticalLines(bEnabled);
 }

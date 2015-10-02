@@ -10,3 +10,9 @@
 [submodule "AVNUtilLibs/Timestamp"]
 	path = AVNUtilLibs/Timestamp
 	url = ssh://git@brains/gitRepos/CPP/AVNUtilLibs/Timestamp.git
+[submodule "AVNDataTypes/SpectrometerDataStream"]
+	path = AVNDataTypes/SpectrometerDataStream
+	url = ssh://git@brains/gitRepos/CPP/AVNDataTypes/SpectrometerDataStream.git
+[submodule "AVNGUILibs/QwtPlotting"]
+	path = AVNGUILibs/QwtPlotting
+	url = ssh://git@brains/gitRepos/CPP/AVNGUILibs/QwtPlotting.git

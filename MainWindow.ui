@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>986</width>
-    <height>654</height>
+    <width>606</width>
+    <height>638</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,28 +25,34 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_mainWindow">
+    <property name="spacing">
+     <number>2</number>
+    </property>
     <property name="margin">
-     <number>3</number>
+     <number>2</number>
     </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_MainWindowTop">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <property name="spacing">
-         <number>6</number>
+         <number>0</number>
         </property>
         <item>
          <widget class="QLabel" name="label">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
-            <height>100</height>
+            <width>65</width>
+            <height>78</height>
            </size>
           </property>
           <property name="text">
@@ -58,20 +64,39 @@
           <property name="scaledContents">
            <bool>true</bool>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
          </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>6</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item>
          <widget class="QLabel" name="label_2">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
-            <height>100</height>
+            <width>83</width>
+            <height>78</height>
            </size>
           </property>
           <property name="text">
@@ -83,25 +108,12 @@
           <property name="scaledContents">
            <bool>true</bool>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
          </widget>
         </item>
        </layout>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_top">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </item>
@@ -112,7 +124,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>986</width>
+     <width>606</width>
      <height>20</height>
     </rect>
    </property>
@@ -132,9 +144,6 @@
     <property name="title">
      <string>Plots</string>
     </property>
-    <addaction name="actionOpen_FFT"/>
-    <addaction name="actionOpen_Waterfall"/>
-    <addaction name="actionOpen_integrated_bandwidth_plot"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuPlots"/>

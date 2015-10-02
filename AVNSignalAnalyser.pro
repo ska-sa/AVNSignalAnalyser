@@ -18,10 +18,14 @@ SOURCES +=\
     NetworkGroupBox.cpp \
     AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.cpp \
     AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.cpp \
-    QwtLinePlotWidget.cpp \
-    QwtWaterfallPlotWidget.cpp \
     PlotsWidget.cpp \
-    QwtLinePlotPicker.cpp
+    AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.cpp \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPicker.cpp \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.cpp \
+    AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.cpp \
+    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.cpp \
+    AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.cpp \
+    AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -29,17 +33,23 @@ HEADERS  += MainWindow.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
     AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.h \
     AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.h \
-    QwtLinePlotWidget.h \
-    QwtWaterfallPlotWidget.h \
     PlotsWidget.h \
-    QwtLinePlotPicker.h
+    AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h \
+    AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.h \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPicker.h \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.h \
+    AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.h \
+    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.h \
+    AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.h \
+    AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.h \
+    AVNUtilLibs/Timestamp/Timestamp.h
 
 
 FORMS    += MainWindow.ui \
     NetworkGroupBox.ui \
-    QwtWaterfallPlotWidget.ui \
-    QwtLinePlotWidget.ui \
-    PlotsWidget.ui
+    PlotsWidget.ui \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.ui \
+    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.ui
 
 RESOURCES += \
     Images.qrc

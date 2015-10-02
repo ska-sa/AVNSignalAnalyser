@@ -8,7 +8,6 @@
 #include <QVector>
 
 //Local includes
-#include "QwtLinePlotWidget.h"
 #include "NetworkGroupBox.h"
 #include "PlotsWidget.h"
 

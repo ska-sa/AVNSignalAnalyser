@@ -13,8 +13,8 @@ using namespace std;
 cMainWindow::cMainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_pUI(new Ui::cMainWindow),
-    m_pNetworkGroupBox(new cNetworkGroupBox(true, false)), //No UDP currently
-    m_pPlotsWidget(new cPlotsWidget)
+    m_pNetworkGroupBox(new cNetworkGroupBox(true, false, this)), //No UDP currently
+    m_pPlotsWidget(new cPlotsWidget(this))
 {
     m_pUI->setupUi(this);
     m_pUI->horizontalLayout_MainWindowTop->insertWidget(3, m_pNetworkGroupBox);
@@ -36,5 +36,5 @@ void cMainWindow::connectSignalsToSlots()
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigDisconnectClicked()), m_pPlotsWidget, SLOT(slotDisconnect()) );
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigPausePlots(bool)), m_pPlotsWidget, SLOT(slotPausePlots(bool)) );
     QObject::connect( m_pPlotsWidget, SIGNAL(sigConnected(bool)), m_pNetworkGroupBox, SLOT(slotSetConnectedOrBound(bool)) );
-
+    QObject::connect( m_pUI->actionExit, SIGNAL(triggered()), this, SLOT(close()));
 }

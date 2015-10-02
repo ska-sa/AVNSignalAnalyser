@@ -13,8 +13,10 @@
 #endif
 
 //Local includes
-#include "QwtLinePlotWidget.h"
 #include "AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.h"
+#include "AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h"
+#include "AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.h"
+#include "AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.h"
 
 namespace Ui {
 class cPlotsWidget;
@@ -28,50 +30,46 @@ public:
     explicit cPlotsWidget(QWidget *parent = 0);
     ~cPlotsWidget();
 
-    bool                            isRunning();
-    void                            setIsRunning(bool bIsRunning);
-
-    static const uint32_t           HEADER_SIZE_B = 16;
-    static const uint32_t           SYNC_WORD = 0x1a2b3c4d;
-
-    enum plotType
-    {
-        WB_SPECTROMETER_CFFT = 0,
-        WB_SPECTROMETER_LRQU = 1,
-        NB_SPECTROMETER_CFFT = 2,
-        NB_SPECTROMETER_LRQU = 3,
-        TIME_DATA = 4,
-        UNDEFINED = 0xffff
-    };
+    bool                                isRunning();
+    void                                setIsRunning(bool bIsRunning);
 
 private:
-    Ui::cPlotsWidget                *m_pUI;
+    Ui::cPlotsWidget                    *m_pUI;
 
-    cQwtLinePlotWidget              *m_pPowerPlotWidget;
-    cQwtLinePlotWidget              *m_pStokesPlotWidget;
+    cFramedQwtLinePlotWidget             *m_pPowerPlotWidget;
+    cFramedQwtLinePlotWidget             *m_pStokesPlotWidget;
+    cBandPowerQwtLinePlot                *m_pBandPowerPlotWidget;
 
-    boost::scoped_ptr<cTCPReceiver> m_pTCPReceiver;
+    boost::scoped_ptr<cTCPReceiver>     m_pTCPReceiver;
 
-    bool                            m_bIsRunning;
-    QReadWriteLock                  m_oIsRunningMutex;
+    bool                                m_bIsRunning;
 
-    void                            getDataThreadFunction();
-    QFuture<void>                   m_oGetDataFuture;
+    bool                                m_bPowerEnabled;
+    bool                                m_bStokesEnabled;
+    bool                                m_bBandPowerEnabled;
 
-    void                            updatePlotType(uint16_t u16PlotType);
-    plotType                        m_ePlotType;
+    QReadWriteLock                      m_oMutex;
+
+    void                                getDataThreadFunction();
+    QFuture<void>                       m_oGetDataFuture;
+
+    void                                updatePlotType(uint16_t u16PlotType);
+    uint16_t                            m_u16PlotType;
 
 public slots:
-    void                            slotConnect(QString qstrPeer, unsigned short usPeerPort);
-    void                            slotDisconnect();
-    void                            slotPausePlots();
-    void                            slotPausePlots(bool bPause);
-    void                            slotResumePlots();
+    void                                slotConnect(QString qstrPeer, unsigned short usPeerPort);
+    void                                slotDisconnect();
+    void                                slotPausePlots();
+    void                                slotPausePlots(bool bPause);
+    void                                slotResumePlots();
+    void                                slotPowerWidgetEnabled(bool bEnabled);
+    void                                slotStokesWidgetEnabled(bool bEnabled);
+    void                                slotBandPowerWidgetEnabled(bool bEnabled);
 
 signals:
-    void                            sigConnected();
-    void                            sigDisconnected();
-    void                            sigConnected(bool bIsConnected);
+    void                                sigConnected();
+    void                                sigDisconnected();
+    void                                sigConnected(bool bIsConnected);
 
 };
 

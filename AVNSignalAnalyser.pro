@@ -20,12 +20,13 @@ SOURCES +=\
     AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.cpp \
     PlotsWidget.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.cpp \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPicker.cpp \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.cpp \
     AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.cpp \
     AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.cpp \
     AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.cpp \
-    AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.cpp
+    AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.cpp \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotDistancePicker.cpp \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -36,13 +37,14 @@ HEADERS  += MainWindow.h \
     PlotsWidget.h \
     AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.h \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPicker.h \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.h \
     AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.h \
     AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.h \
     AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.h \
     AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.h \
-    AVNUtilLibs/Timestamp/Timestamp.h
+    AVNUtilLibs/Timestamp/Timestamp.h \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotDistancePicker.h \
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.h
 
 
 FORMS    += MainWindow.ui \

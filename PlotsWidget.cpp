@@ -28,12 +28,19 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
     m_pUI->horizontalLayout_stokes->insertWidget(0, m_pStokesPlotWidget);
     m_pUI->horizontalLayout_bandPower->insertWidget(0, m_pBandPowerPlotWidget);
 
+    //Use differnt colours for Stokes assumes 2 channels
+    m_pStokesPlotWidget->m_qveCurveColours.erase(m_pStokesPlotWidget->m_qveCurveColours.begin(), m_pStokesPlotWidget->m_qveCurveColours.begin() + 2);
+
     m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1, QString("s"));
 
+    //Plot enabling/disabling
     QObject::connect(m_pUI->groupBox_powers, SIGNAL(clicked(bool)), this, SLOT(slotPowerWidgetEnabled(bool)));
     QObject::connect(m_pUI->groupBox_stokes, SIGNAL(clicked(bool)), this, SLOT(slotStokesWidgetEnabled(bool)));
     QObject::connect(m_pUI->groupBox_bandPower, SIGNAL(clicked(bool)), this, SLOT(slotBandPowerWidgetEnabled(bool)));
+
+    //Vertical lines for intergrated bandwidth
     QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pPowerPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
+    QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pStokesPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
 }
 
 cPlotsWidget::~cPlotsWidget()
@@ -80,6 +87,7 @@ void cPlotsWidget::slotPausePlots(bool bPause)
 {
     m_pPowerPlotWidget->slotPause(bPause);
     m_pStokesPlotWidget->slotPause(bPause);
+    m_pBandPowerPlotWidget->slotPause(bPause);
 }
 
 void cPlotsWidget::slotPausePlots()
@@ -127,10 +135,16 @@ void cPlotsWidget::getDataThreadFunction()
     bool bResync = false;
 
     QVector<char> qvcPacket;
-    QVector<QVector<float> > qvvfPowerLR;
-    QVector<QVector<float> > qvvfStokesQU;
-    qvvfPowerLR.resize(2);
-    qvvfStokesQU.resize(2);
+    QVector<QVector<float> > qvvfPlotData;
+    qvvfPlotData.resize(4);
+
+    QVector<uint32_t> qvu32PowerLRChanList;
+    qvu32PowerLRChanList.push_back(0);
+    qvu32PowerLRChanList.push_back(1);
+
+    QVector<uint32_t> qvu32StokesQUChanList;
+    qvu32StokesQUChanList.push_back(2);
+    qvu32StokesQUChanList.push_back(3);
 
     float *fpPowerLeft = NULL;
     float *fpPowerRight = NULL;
@@ -200,12 +214,12 @@ void cPlotsWidget::getDataThreadFunction()
         u32NSamplesPerFrame = u32NSamplesPerPacket * u8NPacketsPerFrame;
 
         //Resize plot vectors as necessary
-        if((uint32_t)qvvfPowerLR[0].size() != u32NSamplesPerFrame / 4)
+        if((uint32_t)qvvfPlotData[0].size() != u32NSamplesPerFrame / 4)
         {
-            qvvfPowerLR[0].resize(u32NSamplesPerFrame / 4);
-            qvvfPowerLR[1].resize(u32NSamplesPerFrame / 4);
-            qvvfStokesQU[0].resize(u32NSamplesPerFrame / 4);
-            qvvfStokesQU[1].resize(u32NSamplesPerFrame / 4);
+            for(uint32_t ui = 0; ui <  qvvfPlotData.size(); ui++)
+            {
+                qvvfPlotData[ui].resize(u32NSamplesPerFrame / 4);
+            }
         }
 
         //Update scales etc. as necessary based on the plot type.
@@ -220,10 +234,10 @@ void cPlotsWidget::getDataThreadFunction()
         while(!bResync)
         {
             //Some pointers for copying values
-            fpPowerLeft = &qvvfPowerLR[0].front();
-            fpPowerRight = &qvvfPowerLR[1].front();
-            fpStokesQ = &qvvfStokesQU[0].front();
-            fpStokesU = &qvvfStokesQU[1].front();
+            fpPowerLeft = &qvvfPlotData[0].front();
+            fpPowerRight = &qvvfPlotData[1].front();
+            fpStokesQ = &qvvfPlotData[2].front();
+            fpStokesU = &qvvfPlotData[3].front();
 
             for(uint8_t u8ExpectedPacketIndex = 0; u8ExpectedPacketIndex < u8NPacketsPerFrame; u8ExpectedPacketIndex++)
             {
@@ -303,15 +317,15 @@ void cPlotsWidget::getDataThreadFunction()
                 for(uint32_t u32SampleNo = 0; u32SampleNo < u32NSamplesPerPacket / 4; u32SampleNo++)
                 {
 #ifdef _WIN32
-                    *fpPowerLeft++ =    _byteswap_long( *i32pData++ );
-                    *fpPowerRight++ =   _byteswap_long( *i32pData++ );
-                    *fpStokesQ++ =      _byteswap_long( *i32pData++ );
-                    *fpStokesU++ =      _byteswap_long( *i32pData++ );
+                    *fpPowerLeft++ =    (int32_t)( _byteswap_long( *i32pData++ ) );
+                    *fpPowerRight++ =   (int32_t)( _byteswap_long( *i32pData++ ) );
+                    *fpStokesQ++ =      (int32_t)( _byteswap_long( *i32pData++ ) );
+                    *fpStokesU++ =      (int32_t)( _byteswap_long( *i32pData++ ) );
 #else
-                    *fpPowerLeft++ =    __builtin_bswap32( *i32pData++ );
-                    *fpPowerRight++ =   __builtin_bswap32( *i32pData++ );
-                    *fpStokesQ++ =      __builtin_bswap32( *i32pData++ );
-                    *fpStokesU++ =      __builtin_bswap32( *i32pData++ );
+                    *fpPowerLeft++ =    (int32_t)( __builtin_bswap32( *i32pData++ ) );
+                    *fpPowerRight++ =   (int32_t)( __builtin_bswap32( *i32pData++ ) );
+                    *fpStokesQ++ =      (int32_t)( __builtin_bswap32( *i32pData++ ) );
+                    *fpStokesU++ =      (int32_t)( __builtin_bswap32( *i32pData++ ) );
 #endif
                 }
 
@@ -324,17 +338,17 @@ void cPlotsWidget::getDataThreadFunction()
 
                     if(m_bPowerEnabled)
                     {
-                        m_pPowerPlotWidget->addData(qvvfPowerLR, i64Timestamp_us);
+                        m_pPowerPlotWidget->addData(qvvfPlotData, i64Timestamp_us, qvu32PowerLRChanList);
                     }
 
                     if(m_bStokesEnabled)
                     {
-                        m_pStokesPlotWidget->addData(qvvfStokesQU, i64Timestamp_us);
+                        m_pStokesPlotWidget->addData(qvvfPlotData, i64Timestamp_us, qvu32StokesQUChanList);
                     }
 
                     if(m_bBandPowerEnabled)
                     {
-                        m_pBandPowerPlotWidget->addData(qvvfPowerLR, i64Timestamp_us);
+                        m_pBandPowerPlotWidget->addData(qvvfPlotData, i64Timestamp_us);
                     }
                 }
 
@@ -366,8 +380,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
         m_pPowerPlotWidget->setXUnit(QString("MHz"));
         QVector<QString> qvqstrCurveNames;
-        qvqstrCurveNames.push_back(QString("LCP"));
-        qvqstrCurveNames.push_back(QString("RCP"));
+        qvqstrCurveNames.push_back(QString("LCP     "));
+        qvqstrCurveNames.push_back(QString("RCP     "));
         m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setTitle(QString("WB Spectrometer - Stokes Q and U"));
@@ -380,15 +394,18 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("Stokes U"));
         m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
-        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
         m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
-        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
+        m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
-        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
+        qvqstrCurveNames.push_back(QString("Stokes Q"));
+        qvqstrCurveNames.push_back(QString("Stokes U"));
+        m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
@@ -427,15 +444,18 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("Relative Phase"));
         m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
-        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
         m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
-        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
+        m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
-        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
+        qvqstrCurveNames.push_back(QString("Stokes Q"));
+        qvqstrCurveNames.push_back(QString("Stokes U"));
+        m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
@@ -457,7 +477,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
-        m_pPowerPlotWidget->setXUnit(QString("Hz"));
+        m_pPowerPlotWidget->setXUnit(QString("kHz"));
         QVector<QString> qvqstrCurveNames;
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
@@ -467,25 +487,28 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pStokesPlotWidget->setYLabel(QString("Relative Power"));
         m_pStokesPlotWidget->setYUnit(QString(""));
         m_pStokesPlotWidget->setXLabel(QString("Frequency"));
-        m_pStokesPlotWidget->setXUnit(QString("Hz"));
+        m_pStokesPlotWidget->setXUnit(QString("kHz"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("Stokes Q"));
         qvqstrCurveNames.push_back(QString("Stokes U"));
         m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
-        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
-        m_pBandPowerPlotWidget->setYUnit(QString("dB/Hz"));
-        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
+        m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
+        m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
-        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
+        qvqstrCurveNames.push_back(QString("Stokes Q"));
+        qvqstrCurveNames.push_back(QString("Stokes U"));
+        m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
-        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 1024, QString("Hz")); //Todo, find a good way to determine the number of bins implicity
+        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 4096, QString("kHz")); //Todo, find a good way to determine the number of bins implicity
 
         m_pPowerPlotWidget->enableLogConversion(true);
         m_pBandPowerPlotWidget->enableLogConversion(true);
@@ -504,7 +527,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
-        m_pPowerPlotWidget->setXUnit(QString("Hz"));
+        m_pPowerPlotWidget->setXUnit(QString("kHz"));
         QVector<QString> qvqstrCurveNames;
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
@@ -514,24 +537,27 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pStokesPlotWidget->setYLabel(QString("Relative Phase"));
         m_pStokesPlotWidget->setYUnit(QString("rad"));
         m_pStokesPlotWidget->setXLabel(QString("Frequency"));
-        m_pStokesPlotWidget->setXUnit(QString("Hz"));
+        m_pStokesPlotWidget->setXUnit(QString("kHz"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("Relative Phase"));
         m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power - L and R Circular Polarisation"));
-        m_pBandPowerPlotWidget->setYLabel(QString("Band Power Density"));
-        m_pBandPowerPlotWidget->setYUnit(QString("dB/Hz"));
-        m_pBandPowerPlotWidget->setXLabel(QString("Time"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
+        m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
+        m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
+        m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
-        m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
+        qvqstrCurveNames.push_back(QString("Stokes Q"));
+        qvqstrCurveNames.push_back(QString("Stokes U"));
+        m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setXSpan(-781.25,781.25);
+        m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
-        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 1024, QString("Hz")); //Todo, find a good way to determine the number of bins implicity
+        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 4096, QString("kHz")); //Todo, find a good way to determine the number of bins implicity
 
         m_pPowerPlotWidget->enableLogConversion(true);
         m_pBandPowerPlotWidget->enableLogConversion(true);

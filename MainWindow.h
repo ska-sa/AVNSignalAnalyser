@@ -8,7 +8,7 @@
 #include <QVector>
 
 //Local includes
-#include "NetworkGroupBox.h"
+#include "NetworkConnectionWidget.h"
 #include "PlotsWidget.h"
 
 namespace Ui {
@@ -25,7 +25,7 @@ public:
 
 private:
     Ui::cMainWindow                 *m_pUI;
-    cNetworkGroupBox                *m_pNetworkGroupBox;
+    cNetworkConnectionWidget        *m_pNetworkGroupBox;
     cPlotsWidget                    *m_pPlotsWidget;
 
     void                            connectSignalsToSlots();

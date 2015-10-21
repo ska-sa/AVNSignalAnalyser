@@ -4,12 +4,12 @@
 #include <QDebug>
 
 //Local includes
-#include "NetworkGroupBox.h"
-#include "ui_NetworkGroupBox.h"
+#include "NetworkConnectionWidget.h"
+#include "ui_NetworkConnectionWidget.h"
 
-cNetworkGroupBox::cNetworkGroupBox(bool bTCPEnabled, bool bUDPEnabled, QWidget *parent) :
+cNetworkConnectionWidget::cNetworkConnectionWidget(bool bTCPEnabled, bool bUDPEnabled, QWidget *parent) :
     QGroupBox(parent),
-    m_pUI(new Ui::cNetworkGroupBox),
+    m_pUI(new Ui::cNetworkConnectionWidget),
     m_bIsConnectedOrBound(false),
     m_bIsPaused(false),
     m_bTCPIsEnabled(bTCPEnabled),
@@ -25,25 +25,25 @@ cNetworkGroupBox::cNetworkGroupBox(bool bTCPEnabled, bool bUDPEnabled, QWidget *
     updateGUI();
 }
 
-cNetworkGroupBox::~cNetworkGroupBox()
+cNetworkConnectionWidget::~cNetworkConnectionWidget()
 {
     delete m_pUI;
 }
 
-void cNetworkGroupBox::connectSignalsToSlots()
+void cNetworkConnectionWidget::connectSignalsToSlots()
 {
     QObject::connect( m_pUI->comboBox_networkProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSetNetworkProtocol(int)) );
     QObject::connect( m_pUI->pushButton_connectDisconnect, SIGNAL(clicked()), this, SLOT(slotConnectDisconnect()) );
     QObject::connect( m_pUI->pushButton_pauseResume, SIGNAL(clicked()), this, SLOT(slotPauseResumePlots()) );
 }
 
-void cNetworkGroupBox::slotSetNetworkProtocol(int iNetworkProtocol)
+void cNetworkConnectionWidget::slotSetNetworkProtocol(int iNetworkProtocol)
 {
-    m_eNetworkProtocol = NetworkProtocol(iNetworkProtocol);
+    m_eNetworkProtocol = Protocol(iNetworkProtocol);
     updateGUI();
 }
 
-void cNetworkGroupBox::slotConnectDisconnect()
+void cNetworkConnectionWidget::slotConnectDisconnect()
 {
     if(m_bIsConnectedOrBound)
     {
@@ -51,11 +51,23 @@ void cNetworkGroupBox::slotConnectDisconnect()
     }
     else
     {
-        sigConnectClicked(m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_port->value());
+        switch(m_eNetworkProtocol)
+        {
+        case TCP:
+            sigConnectClicked(TCP, QString(""), 0, m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_port->value());
+            break;
+
+        case UDP:
+            sigConnectClicked(UDP, m_pUI->lineEdit_interface->text(), m_pUI->spinBox_localPort->value(), m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_port->value());
+            break;
+
+        default:
+            return; //Shouldn't ever be reached if the GUI is correct
+        }
     }
 }
 
-void cNetworkGroupBox::slotPauseResumePlots()
+void cNetworkConnectionWidget::slotPauseResumePlots()
 {
     m_bIsPaused = !m_bIsPaused;
 
@@ -64,14 +76,14 @@ void cNetworkGroupBox::slotPauseResumePlots()
     sigPausePlots(m_bIsPaused);
 }
 
-void cNetworkGroupBox::slotSetConnectedOrBound(bool bIsConnectedOrBound)
+void cNetworkConnectionWidget::slotSetConnectedOrBound(bool bIsConnectedOrBound)
 {
     m_bIsConnectedOrBound = bIsConnectedOrBound;
 
     updateGUI();
 }
 
-void cNetworkGroupBox::updateGUI()
+void cNetworkConnectionWidget::updateGUI()
 {
     if(m_pUI->comboBox_networkProtocol->currentText() == QString("TCP"))
     {
@@ -86,6 +98,8 @@ void cNetworkGroupBox::updateGUI()
 
         m_pUI->label_interface->setVisible(false);
         m_pUI->lineEdit_interface->setVisible(false);
+        m_pUI->spinBox_localPort->setVisible(false);
+        m_pUI->label_localColon->setVisible(false);
     }
     else
     {
@@ -100,6 +114,8 @@ void cNetworkGroupBox::updateGUI()
 
         m_pUI->label_interface->setVisible(true);
         m_pUI->lineEdit_interface->setVisible(true);
+        m_pUI->spinBox_localPort->setVisible(true);
+        m_pUI->label_localColon->setVisible(true);
     }
 
     if(m_bIsPaused)
@@ -112,19 +128,19 @@ void cNetworkGroupBox::updateGUI()
     }
 }
 
-void cNetworkGroupBox::setTCPEnabled(bool bEnabled)
+void cNetworkConnectionWidget::setTCPEnabled(bool bEnabled)
 {
     m_bTCPIsEnabled = bEnabled;
     updateAvailableProtocols();
 }
 
-void cNetworkGroupBox::setUDPEnabled(bool bEnabled)
+void cNetworkConnectionWidget::setUDPEnabled(bool bEnabled)
 {
     m_bUDPIsEnabled = bEnabled;
     updateAvailableProtocols();
 }
 
-void cNetworkGroupBox::updateAvailableProtocols()
+void cNetworkConnectionWidget::updateAvailableProtocols()
 {
     m_pUI->comboBox_networkProtocol->clear();
 

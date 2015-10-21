@@ -15,8 +15,8 @@ TEMPLATE = app
 SOURCES +=\
         MainWindow.cpp \
     Main.cpp \
-    NetworkGroupBox.cpp \
     AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.cpp \
+    AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingUDPSocket.cpp \
     AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.cpp \
     PlotsWidget.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.cpp \
@@ -26,13 +26,19 @@ SOURCES +=\
     AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.cpp \
     AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.cpp \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotDistancePicker.cpp \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.cpp
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.cpp \
+    AVNGUILibs/QwtPlotting/CursorCentredQwtPlotMagnifier.cpp \
+    AVNGUILibs/QwtPlotting/AnimatedQwtPlotZoomer.cpp \
+    AVNAppLibs/SocketStreamers/SocketReceiverBase.cpp \
+    AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.cpp \
+    NetworkConnectionWidget.cpp \
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.cpp
 
 
 HEADERS  += MainWindow.h \
-    NetworkGroupBox.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
     AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.h \
+    AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingUDPSocket.h \
     AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.h \
     PlotsWidget.h \
     AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h \
@@ -44,14 +50,20 @@ HEADERS  += MainWindow.h \
     AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.h \
     AVNUtilLibs/Timestamp/Timestamp.h \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotDistancePicker.h \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.h
+    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.h \
+    AVNGUILibs/QwtPlotting/CursorCentredQwtPlotMagnifier.h \
+    AVNGUILibs/QwtPlotting/AnimatedQwtPlotZoomer.h \
+    AVNAppLibs/SocketStreamers/SocketReceiverBase.h \
+    AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.h \
+    NetworkConnectionWidget.h \
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h
 
 
 FORMS    += MainWindow.ui \
-    NetworkGroupBox.ui \
     PlotsWidget.ui \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.ui \
-    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.ui
+    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.ui \
+    NetworkConnectionWidget.ui
 
 RESOURCES += \
     Images.qrc

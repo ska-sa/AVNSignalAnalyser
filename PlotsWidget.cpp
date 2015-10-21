@@ -4,6 +4,10 @@
 //Library includes
 #include <QtConcurrentRun>
 
+#ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
+#include <boost/make_shared.hpp>
+#endif
+
 //Local includes
 #include "PlotsWidget.h"
 #include "ui_PlotsWidget.h"
@@ -45,14 +49,31 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
 
 cPlotsWidget::~cPlotsWidget()
 {
+    setIsRunning(false);
     delete m_pUI;
 }
 
-void cPlotsWidget::slotConnect(QString qstrPeer, unsigned short usPeerPort)
+void cPlotsWidget::slotConnect(int iProtocol, const QString &qstrLocalInterface, unsigned short usLocalPort, const QString &qstrPeerAddress, unsigned short usPeerPort)
 {
-    //Create and start the TCP receiver
-    m_pTCPReceiver.reset(new cTCPReceiver(qstrPeer.toStdString(), usPeerPort));
-    m_pTCPReceiver->startReceiving();
+    //Create and start the socket receiver depending on protocol
+    switch(cNetworkConnectionWidget::Protocol(iProtocol))
+    {
+    case cNetworkConnectionWidget::TCP:
+        m_pSocketReceiver    = boost::make_shared<cTCPReceiver>(qstrPeerAddress.toStdString(), usPeerPort);
+        break;
+
+    case cNetworkConnectionWidget::UDP:
+        m_pSocketReceiver = boost::make_shared<cUDPReceiver>(qstrLocalInterface.toStdString(), usLocalPort, qstrPeerAddress.toStdString(), usPeerPort);
+        break;
+
+    default:
+        //Return if protocol unknown. Should never happen
+        return;
+    }
+
+    m_pStreamInterpreter = boost::make_shared<cSpectrometerDataStreamInterpreter>(m_pSocketReceiver);
+    m_pSocketReceiver->startReceiving();
+
     sigConnected();
     sigConnected(true);
 
@@ -70,12 +91,17 @@ void cPlotsWidget::slotDisconnect()
     cout << "cPlotsWidget::slotDisconnect(): Waiting for getDataThread to stop..." << endl;
     m_oGetDataFuture.waitForFinished();
 
+    //Stop the TCP receiver and interpreter
 
+    cout << "cPlotsWidget::slotDisconnect(): Closing SpectrometerDataStreamInterpreter..." << endl;
 
-    //Stop the TCP receiver
+    m_pStreamInterpreter.reset();
+
+    cout << "cPlotsWidget::slotDisconnect(): SpectrometerDataStreamInterpreter destroyed..." << endl;
+
     cout << "cPlotsWidget::slotDisconnect(): Closing TCPReceiver..." << endl;
 
-    m_pTCPReceiver.reset();
+    m_pSocketReceiver.reset();
 
     cout << "cPlotsWidget::slotDisconnect(): TCPReceiver destroyed." << endl;
 
@@ -112,29 +138,20 @@ void cPlotsWidget::setIsRunning(bool bIsRunning)
     QWriteLocker oWriteLock(&m_oMutex);
 
     m_bIsRunning = bIsRunning;
+
+    if(m_pStreamInterpreter.get())
+    {
+        m_pStreamInterpreter->setIsRunning(bIsRunning);
+    }
 }
 
 void cPlotsWidget::getDataThreadFunction()
 {
+    cout << "Entered cPlotsWidget::getDataThreadFunction()" << endl;
+
     //Thread function fetching data from TCP Receiver and conditioning for plotting.
 
-    //Variables and vectors used in loops:
-    uint32_t u32PacketSize_B = 0;
-    int32_t i32NextPacketSize_B = 0;
-    uint32_t u32NSamplesPerPacket = 0;
-    uint32_t u32NSamplesPerFrame = 0;
-    uint8_t u8NPacketsPerFrame = 0;
-    uint8_t u8CurrentNPacketsPerFrame = 0;
-    uint8_t u8CurrentPacketIndex = 0;
-    uint16_t u16PlotType = 0xffff;
-    int64_t i64LastUsedTimestamp_us = 0;
-
-    int64_t i64Timestamp_us = 0;
-
-    bool bSkipFrame = false;
-    bool bResync = false;
-
-    QVector<char> qvcPacket;
+    //Variables and vectors used for plot data:
     QVector<QVector<float> > qvvfPlotData;
     qvvfPlotData.resize(4);
 
@@ -150,209 +167,58 @@ void cPlotsWidget::getDataThreadFunction()
     float *fpPowerRight = NULL;
     float *fpStokesQ = NULL;
     float *fpStokesU = NULL;
-    int32_t *i32pData = NULL;
-
 
     while(isRunning())
     {
-        do
+        while(!m_pStreamInterpreter->synchronise())
         {
             if(!isRunning())
                 return;
-
-            i32NextPacketSize_B = m_pTCPReceiver->getNextPacketSize_B(500);
-        }
-        while(i32NextPacketSize_B == -1);
-
-        //Resize Arrays as required
-        if(qvcPacket.size() != i32NextPacketSize_B)
-        {
-            qvcPacket.resize(i32NextPacketSize_B);
-            u32PacketSize_B = i32NextPacketSize_B;
         }
 
-        //Synchronise: Find the last packet of the frame
-        cout << "Resynchronising to frame border." << endl;
-        do
-        {
-            if(!isRunning())
-                return;
-
-            m_pTCPReceiver->getNextPacket(&qvcPacket.front(), 500);
-            u8CurrentPacketIndex = *(uint8_t*)(qvcPacket.constData() + 12);
-            u8CurrentNPacketsPerFrame = *(uint8_t*)(qvcPacket.constData() + 13);
-
-#ifdef _WIN32
-            if( _byteswap_long( *(uint32_t*)qvcPacket.constData() ) != SYNC_WORD)
-            {
-                cout << "cPlotsWidget::getDataThreadFunction(): Warning got wrong magic no: "
-                     << std::hex << _byteswap_long( *(uint32_t*)qvcPacket.constData() ) << ". Expected " << SYNC_WORD << std::dec << endl;
-
-                continue;
-            }
-#else
-            if( __builtin_bswap32( *(uint32_t*)qvcPacket.constData() ) != AVN::Spectrometer::SYNC_WORD)
-            {
-                cout << "cPlotsWidget::getDataThreadFunction(): Warning got wrong magic no: "
-                     << std::hex << __builtin_bswap32( *(uint32_t*)qvcPacket.constData() ) << ". Expected " << AVN::Spectrometer::SYNC_WORD << std::dec << endl;
-
-                continue;
-            }
-#endif
-
-            cout << "cPlotsWidget::getDataThreadFunction(): Synchronising: Got packet " << (uint32_t)u8CurrentPacketIndex << " of " << (uint32_t)u8CurrentNPacketsPerFrame << endl;
-        }
-        while(u8CurrentPacketIndex != u8CurrentNPacketsPerFrame - 1);
-
-        bResync = false;
-
-        cout << "cPlotsWidget::getDataThreadFunction(): Synchronisation successful. Now aquiring data for plotting..." << endl;
-
-        //Set the number of packets per FFT frame, number of bins per packet and total number of bins per frame
-        u8NPacketsPerFrame = u8CurrentNPacketsPerFrame;
-        u32NSamplesPerPacket = (i32NextPacketSize_B - AVN::Spectrometer::HEADER_SIZE_B) / sizeof(int32_t);
-        u32NSamplesPerFrame = u32NSamplesPerPacket * u8NPacketsPerFrame;
+        //After synchronisation stream parameter are available so...
 
         //Resize plot vectors as necessary
-        if((uint32_t)qvvfPlotData[0].size() != u32NSamplesPerFrame / 4)
+        if((uint32_t)qvvfPlotData[0].size() != m_pStreamInterpreter->getNValuesPerChannelPerFrame())
         {
             for(uint32_t ui = 0; ui <  qvvfPlotData.size(); ui++)
             {
-                qvvfPlotData[ui].resize(u32NSamplesPerFrame / 4);
+                qvvfPlotData[ui].resize(m_pStreamInterpreter->getNValuesPerChannelPerFrame());
             }
         }
 
-        //Update scales etc. as necessary based on the plot type.
-#ifdef _WIN32
-        u16PlotType = 0b0000000000001111 & _byteswap_ushort ( *(int16_t*)(qvcPacket.constData() + 14) );
-#else
-        u16PlotType = 0b0000000000001111 & __builtin_bswap16( *(int16_t*)(qvcPacket.constData() + 14) );
-#endif
-        updatePlotType(u16PlotType);
+        //Some pointers for copying data values
+        fpPowerLeft = &qvvfPlotData[0].front();
+        fpPowerRight = &qvvfPlotData[1].front();
+        fpStokesQ = &qvvfPlotData[2].front();
+        fpStokesU = &qvvfPlotData[3].front();
 
-        //Read the data
-        while(!bResync)
+        //Update plotting widget to plot data correctly
+        updatePlotType(m_pStreamInterpreter->getLastHeader().getDigitiserType());
+
+        while(isRunning())
         {
-            //Some pointers for copying values
-            fpPowerLeft = &qvvfPlotData[0].front();
-            fpPowerRight = &qvvfPlotData[1].front();
-            fpStokesQ = &qvvfPlotData[2].front();
-            fpStokesU = &qvvfPlotData[3].front();
-
-            for(uint8_t u8ExpectedPacketIndex = 0; u8ExpectedPacketIndex < u8NPacketsPerFrame; u8ExpectedPacketIndex++)
+            //Get the data from the next frame. Return false means an inconsistency was incountered
+            if(!m_pStreamInterpreter->getNextFrame(fpPowerLeft, fpPowerRight, fpStokesQ, fpStokesU, qvvfPlotData[0].size()))
             {
-                //Check for data consistency
-                do
-                {
-                    if(!isRunning())
-                        return;
-
-                    i32NextPacketSize_B = m_pTCPReceiver->getNextPacketSize_B(500);
-                }
-                while(i32NextPacketSize_B == -1);
-
-                if((unsigned)i32NextPacketSize_B != u32PacketSize_B)
-                {
-                    cout << "cPlotsWidget::getDataThreadFunction(): Got different packet size, resynchronising." << endl;
-                    bResync = true;
-                    break;
-                }
-
-                //Read the next packet
-                while(!m_pTCPReceiver->getNextPacket(&qvcPacket.front(), 500))
-                {
-                    if(!isRunning())
-                        return;
-                }
-
-                //Get timestamp on the first subframe
-                if(!u8ExpectedPacketIndex)
-                {
-#ifdef _WIN32
-                    i64Timestamp_us = _byteswap_uint64( *(int64_t*)(qvcPacket.constData() + 4) );
-#else
-                    i64Timestamp_us = __builtin_bswap64( *(int64_t*)(qvcPacket.constData() + 4) );
-#endif
-                    //cout << "Got packet with timestamp " << i64Timestamp_us << endl;
-
-                    //Attempt to reach 30 frames per second.
-                    bSkipFrame = (i64Timestamp_us - i64LastUsedTimestamp_us) < 33333;
-                }
-
-                if(bSkipFrame)
-                    continue;
-
-                //Some more consistency checks
-                u8CurrentPacketIndex = *(uint8_t*)(qvcPacket.constData() + 12);
-                u8CurrentNPacketsPerFrame = *(uint8_t*)(qvcPacket.constData() + 13);
-#ifdef _WIN32
-                u16PlotType = 0b0000000000001111 & _byteswap_ushort ( *(int16_t*)(qvcPacket.constData() + 14) );
-#else
-                u16PlotType = 0b0000000000001111 & __builtin_bswap16( *(int16_t*)(qvcPacket.constData() + 14) );
-#endif
-                if(u8CurrentPacketIndex != u8ExpectedPacketIndex)
-                {
-                    cout << "Expected packet index " << (uint32_t)u8ExpectedPacketIndex << ", got " << (uint32_t)u8CurrentPacketIndex << ". Resynchronising." << endl;
-                    bResync = true;
-                    break;
-                }
-
-                if(u8NPacketsPerFrame != u8CurrentNPacketsPerFrame)
-                {
-                    cout << "Expected " << (uint32_t)u8NPacketsPerFrame << " packets per frame, got " << (uint32_t)u8CurrentNPacketsPerFrame << ". Resynchronising." << endl;
-                    bResync = true;
-                    break;
-                }
-
-                if(u16PlotType != m_u16PlotType)
-                {
-                    cout << "Expected plot type " << m_u16PlotType << " , got " << u16PlotType << ". Resynchronising." << endl;
-                    bResync = true;
-                    break;
-                }
-
-                i32pData = (int32_t*)(qvcPacket.constData() + 16); //Go to offset of first sample (header is 16 bytes).
-
-                //Deinterleave data (requires endianess change).
-                for(uint32_t u32SampleNo = 0; u32SampleNo < u32NSamplesPerPacket / 4; u32SampleNo++)
-                {
-#ifdef _WIN32
-                    *fpPowerLeft++ =    (int32_t)( _byteswap_long( *i32pData++ ) );
-                    *fpPowerRight++ =   (int32_t)( _byteswap_long( *i32pData++ ) );
-                    *fpStokesQ++ =      (int32_t)( _byteswap_long( *i32pData++ ) );
-                    *fpStokesU++ =      (int32_t)( _byteswap_long( *i32pData++ ) );
-#else
-                    *fpPowerLeft++ =    (int32_t)( __builtin_bswap32( *i32pData++ ) );
-                    *fpPowerRight++ =   (int32_t)( __builtin_bswap32( *i32pData++ ) );
-                    *fpStokesQ++ =      (int32_t)( __builtin_bswap32( *i32pData++ ) );
-                    *fpStokesU++ =      (int32_t)( __builtin_bswap32( *i32pData++ ) );
-#endif
-                }
-
+                break; //Causes resync
             }
 
-            if(!bResync && !bSkipFrame)
+            QReadLocker oLock(&m_oMutex);
+
+            if(m_bPowerEnabled)
             {
-                {
-                    QReadLocker oLock(&m_oMutex);
+                m_pPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32PowerLRChanList);
+            }
 
-                    if(m_bPowerEnabled)
-                    {
-                        m_pPowerPlotWidget->addData(qvvfPlotData, i64Timestamp_us, qvu32PowerLRChanList);
-                    }
+            if(m_bStokesEnabled)
+            {
+                m_pStokesPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32StokesQUChanList);
+            }
 
-                    if(m_bStokesEnabled)
-                    {
-                        m_pStokesPlotWidget->addData(qvvfPlotData, i64Timestamp_us, qvu32StokesQUChanList);
-                    }
-
-                    if(m_bBandPowerEnabled)
-                    {
-                        m_pBandPowerPlotWidget->addData(qvvfPlotData, i64Timestamp_us);
-                    }
-                }
-
-                i64LastUsedTimestamp_us = i64Timestamp_us;
+            if(m_bBandPowerEnabled)
+            {
+                m_pBandPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us());
             }
         }
     }
@@ -366,8 +232,6 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     //If the plot is the same do nothing
     if(m_u16PlotType == u16PlotType)
         return;
-
-    cout << "--- Plot type " << u16PlotType << endl;
 
     //Otherwise update
     switch(u16PlotType)
@@ -409,8 +273,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pStokesPlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
-        m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, 1024, QString("MHz")); //Todo, find a good way to determine the number of bins implicity
-
+        m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, QString("MHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
         m_pBandPowerPlotWidget->enableLogConversion(true);
@@ -459,7 +322,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pStokesPlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
-        m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, 1024, QString("MHz")); //Todo, find a good way to determine the number of bins implicity
+        m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, QString("MHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
         m_pBandPowerPlotWidget->enableLogConversion(true);
@@ -508,7 +371,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
-        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 4096, QString("kHz")); //Todo, find a good way to determine the number of bins implicity
+        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, QString("kHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
         m_pBandPowerPlotWidget->enableLogConversion(true);
@@ -557,7 +420,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
-        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, 4096, QString("kHz")); //Todo, find a good way to determine the number of bins implicity
+        m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, QString("kHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
         m_pBandPowerPlotWidget->enableLogConversion(true);

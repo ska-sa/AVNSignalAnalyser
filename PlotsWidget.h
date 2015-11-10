@@ -15,7 +15,7 @@
 //Local includes
 #include "AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.h"
 #include "AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.h"
-#include "AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h"
+#include "AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.h"
 #include "AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h"
 #include "AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.h"
 #include "AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.h"

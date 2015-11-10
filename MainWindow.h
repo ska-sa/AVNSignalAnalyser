@@ -29,6 +29,10 @@ private:
     cPlotsWidget                    *m_pPlotsWidget;
 
     void                            connectSignalsToSlots();
+
+private slots:
+    void                            slotSetConnectedOrBound(bool bIsConnectedOrBound);
+    void                            slotSetKATCPConnected(bool bIsKATCPConnected);
 };
 
 #endif // MAINWINDOW_H

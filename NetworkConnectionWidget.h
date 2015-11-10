@@ -12,43 +12,43 @@ class cNetworkConnectionWidget : public QGroupBox
     Q_OBJECT
 
 public:
-    enum Protocol
+    enum dataProtocol
     {
         TCP=0,
         UDP
     };
 
-    explicit cNetworkConnectionWidget(bool bTCPEnabled = true, bool bUDPEnabled = true, QWidget *parent = 0);
+    explicit cNetworkConnectionWidget(bool bTCPAvailable = true, bool bUDPAvailable = true, bool bKATCPAvailable = true, QWidget *pParent = 0);
     ~cNetworkConnectionWidget();
 
-    void                            setTCPEnabled(bool bEnabled);
-    void                            setUDPEnabled(bool bEnabled);
+    void                            setTCPAvailable(bool bAvailable);
+    void                            setUDPAvailable(bool bAvailable);
+    void                            setKATCPAvailable(bool bAvailable);
 
 private:
     Ui::cNetworkConnectionWidget    *m_pUI;
 
-    Protocol                        m_eNetworkProtocol;
+    dataProtocol                    m_eDataProtocol;
     bool                            m_bIsConnectedOrBound;
-    bool                            m_bIsPaused;
-    bool                            m_bTCPIsEnabled;
-    bool                            m_bUDPIsEnabled;
+    bool                            m_bTCPIsAvailable;
+    bool                            m_bUDPIsAvailable;
+    bool                            m_bKATCPAvailable;
 
     void                            connectSignalsToSlots();
     void                            updateAvailableProtocols();
     void                            updateGUI();
 
 private slots:
-    void                            slotSetNetworkProtocol(int iNetworkProtocol);
-    void                            slotConnectDisconnect();
-    void                            slotPauseResumePlots();
+    void                            slotSetDataProtocol(int iDataProtocol);
 
 public slots:
     void                            slotSetConnectedOrBound(bool bIsConnectedOrBound);
+    void                            slotConnectDisconnect();
 
 signals:
-    void                            sigConnectClicked(int iProtocol, const QString &qstrLocalInterface, unsigned short usLocalPort, const QString &qstrPeerAddress, unsigned short usPort);
+    void                            sigConnectClicked(int iDataProtocol, const QString &qstrLocalInterface, unsigned short usLocalPort, const QString &qstrPeerAddress, unsigned short usPort);
     void                            sigDisconnectClicked();
-    void                            sigPausePlots(bool bPause);
+    void                            sigConnectedOrBound(bool);
 };
 
 #endif // NETWORK_CONNECTION_WIDGET_H

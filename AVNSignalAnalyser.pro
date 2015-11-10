@@ -32,7 +32,10 @@ SOURCES +=\
     AVNAppLibs/SocketStreamers/SocketReceiverBase.cpp \
     AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.cpp \
     NetworkConnectionWidget.cpp \
-    AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.cpp
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.cpp \
+    RoachAcquistionControlWidget.cpp \
+    AVNUtilLibs/Timestamp/Timestamp.cpp \
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -56,14 +59,16 @@ HEADERS  += MainWindow.h \
     AVNAppLibs/SocketStreamers/SocketReceiverBase.h \
     AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.h \
     NetworkConnectionWidget.h \
-    AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h \
+    RoachAcquistionControlWidget.h
 
 
 FORMS    += MainWindow.ui \
     PlotsWidget.ui \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.ui \
     AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.ui \
-    NetworkConnectionWidget.ui
+    NetworkConnectionWidget.ui \
+    RoachAcquistionControlWidget.ui
 
 RESOURCES += \
     Images.qrc

@@ -17,7 +17,8 @@ cMainWindow::cMainWindow(QWidget *parent) :
     m_pPlotsWidget(new cPlotsWidget(this))
 {
     m_pUI->setupUi(this);
-    m_pUI->horizontalLayout_MainWindowTop->insertWidget(3, m_pNetworkGroupBox);
+    m_pUI->horizontalLayout_MainWindowTop->insertWidget(1, m_pNetworkGroupBox);
+    m_pUI->horizontalLayout_MainWindowTop->insertSpacerItem(2, new QSpacerItem(20, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed));
     m_pUI->verticalLayout_mainWindow->insertWidget(1, m_pPlotsWidget);
 
     connectSignalsToSlots();
@@ -35,7 +36,21 @@ void cMainWindow::connectSignalsToSlots()
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectClicked(int, const QString&, unsigned short, const QString&, unsigned short)),
                       m_pPlotsWidget, SLOT(slotConnect(int, const QString&, unsigned short, const QString&, unsigned short)) );
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigDisconnectClicked()), m_pPlotsWidget, SLOT(slotDisconnect()) );
-    QObject::connect( m_pNetworkGroupBox, SIGNAL(sigPausePlots(bool)), m_pPlotsWidget, SLOT(slotPausePlots(bool)) );
     QObject::connect( m_pPlotsWidget, SIGNAL(sigConnected(bool)), m_pNetworkGroupBox, SLOT(slotSetConnectedOrBound(bool)) );
     QObject::connect( m_pUI->actionExit, SIGNAL(triggered()), this, SLOT(close()));
+    QObject::connect( m_pUI->actionConnect_Bind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
+    QObject::connect( m_pUI->actionDisconnect_Unbind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
+}
+
+void cMainWindow::slotSetConnectedOrBound(bool bIsConnectedOrBound)
+{
+    //Update menu entries
+    m_pUI->actionConnect_Bind->setEnabled(!bIsConnectedOrBound);
+    m_pUI->actionDisconnect_Unbind->setEnabled(bIsConnectedOrBound);
+}
+
+void cMainWindow::slotSetKATCPConnected(bool bIsKATCPConnected)
+{
+    //Update menu entry
+    m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue->setEnabled(bIsKATCPConnected);
 }

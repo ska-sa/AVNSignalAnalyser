@@ -7,13 +7,13 @@
 #include "NetworkConnectionWidget.h"
 #include "ui_NetworkConnectionWidget.h"
 
-cNetworkConnectionWidget::cNetworkConnectionWidget(bool bTCPEnabled, bool bUDPEnabled, QWidget *parent) :
-    QGroupBox(parent),
+cNetworkConnectionWidget::cNetworkConnectionWidget(bool bTCPAvailable, bool bUDPAvailable, bool bKATCPAvailable, QWidget *pParent) :
+    QGroupBox(pParent),
     m_pUI(new Ui::cNetworkConnectionWidget),
     m_bIsConnectedOrBound(false),
-    m_bIsPaused(false),
-    m_bTCPIsEnabled(bTCPEnabled),
-    m_bUDPIsEnabled(bUDPEnabled)
+    m_bTCPIsAvailable(bTCPAvailable),
+    m_bUDPIsAvailable(bUDPAvailable),
+    m_bKATCPAvailable(bKATCPAvailable)
 {
     m_pUI->setupUi(this);
 
@@ -32,14 +32,13 @@ cNetworkConnectionWidget::~cNetworkConnectionWidget()
 
 void cNetworkConnectionWidget::connectSignalsToSlots()
 {
-    QObject::connect( m_pUI->comboBox_networkProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSetNetworkProtocol(int)) );
+    QObject::connect( m_pUI->comboBox_dataProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSetDataProtocol(int)) );
     QObject::connect( m_pUI->pushButton_connectDisconnect, SIGNAL(clicked()), this, SLOT(slotConnectDisconnect()) );
-    QObject::connect( m_pUI->pushButton_pauseResume, SIGNAL(clicked()), this, SLOT(slotPauseResumePlots()) );
 }
 
-void cNetworkConnectionWidget::slotSetNetworkProtocol(int iNetworkProtocol)
+void cNetworkConnectionWidget::slotSetDataProtocol(int iDataProtocol)
 {
-    m_eNetworkProtocol = Protocol(iNetworkProtocol);
+    m_eDataProtocol = dataProtocol(iDataProtocol);
     updateGUI();
 }
 
@@ -51,14 +50,14 @@ void cNetworkConnectionWidget::slotConnectDisconnect()
     }
     else
     {
-        switch(m_eNetworkProtocol)
+        switch(m_eDataProtocol)
         {
         case TCP:
-            sigConnectClicked(TCP, QString(""), 0, m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_port->value());
+            sigConnectClicked(TCP, QString(""), 0, m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_serverPort->value());
             break;
 
         case UDP:
-            sigConnectClicked(UDP, m_pUI->lineEdit_interface->text(), m_pUI->spinBox_localPort->value(), m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_port->value());
+            sigConnectClicked(UDP, m_pUI->lineEdit_interface->text(), m_pUI->spinBox_localPort->value(), m_pUI->lineEdit_server->text(), (unsigned short)m_pUI->spinBox_serverPort->value());
             break;
 
         default:
@@ -67,25 +66,18 @@ void cNetworkConnectionWidget::slotConnectDisconnect()
     }
 }
 
-void cNetworkConnectionWidget::slotPauseResumePlots()
-{
-    m_bIsPaused = !m_bIsPaused;
-
-    updateGUI();
-
-    sigPausePlots(m_bIsPaused);
-}
-
 void cNetworkConnectionWidget::slotSetConnectedOrBound(bool bIsConnectedOrBound)
 {
     m_bIsConnectedOrBound = bIsConnectedOrBound;
 
     updateGUI();
+
+    sigConnectedOrBound(m_bIsConnectedOrBound);
 }
 
 void cNetworkConnectionWidget::updateGUI()
 {
-    if(m_pUI->comboBox_networkProtocol->currentText() == QString("TCP"))
+    if(m_pUI->comboBox_dataProtocol->currentText() == QString("TCP"))
     {
         if(m_bIsConnectedOrBound)
         {
@@ -118,39 +110,39 @@ void cNetworkConnectionWidget::updateGUI()
         m_pUI->label_localColon->setVisible(true);
     }
 
-    if(m_bIsPaused)
-    {
-        m_pUI->pushButton_pauseResume->setText("Resume Plots");
-    }
-    else
-    {
-        m_pUI->pushButton_pauseResume->setText("Pause Plots");
-    }
 }
 
-void cNetworkConnectionWidget::setTCPEnabled(bool bEnabled)
+void cNetworkConnectionWidget::setTCPAvailable(bool bAvailable)
 {
-    m_bTCPIsEnabled = bEnabled;
+    m_bTCPIsAvailable = bAvailable;
     updateAvailableProtocols();
 }
 
-void cNetworkConnectionWidget::setUDPEnabled(bool bEnabled)
+void cNetworkConnectionWidget::setUDPAvailable(bool bAvailable)
 {
-    m_bUDPIsEnabled = bEnabled;
+    m_bUDPIsAvailable = bAvailable;
+    updateAvailableProtocols();
+}
+
+void cNetworkConnectionWidget::setKATCPAvailable(bool bAvailable)
+{
+    m_bUDPIsAvailable = bAvailable;
     updateAvailableProtocols();
 }
 
 void cNetworkConnectionWidget::updateAvailableProtocols()
 {
-    m_pUI->comboBox_networkProtocol->clear();
+    m_pUI->comboBox_dataProtocol->clear();
 
-    if(m_bTCPIsEnabled)
+    if(m_bTCPIsAvailable)
     {
-        m_pUI->comboBox_networkProtocol->addItem(QString("TCP"));
+        m_pUI->comboBox_dataProtocol->addItem(QString("TCP"));
     }
 
-    if(m_bUDPIsEnabled)
+    if(m_bUDPIsAvailable)
     {
-        m_pUI->comboBox_networkProtocol->addItem(QString("UDP"));
+        m_pUI->comboBox_dataProtocol->addItem(QString("UDP"));
     }
+
+
 }

@@ -12,7 +12,7 @@
 #include "PlotsWidget.h"
 #include "ui_PlotsWidget.h"
 
-#include "AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h"
+#include "AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.h"
 
 using namespace std;
 
@@ -35,7 +35,7 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
     //Use differnt colours for Stokes assumes 2 channels
     m_pStokesPlotWidget->m_qveCurveColours.erase(m_pStokesPlotWidget->m_qveCurveColours.begin(), m_pStokesPlotWidget->m_qveCurveColours.begin() + 2);
 
-    m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1, QString("s"));
+    m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1, QString("s")); //Band power span is in seconds:
 
     //Plot enabling/disabling
     QObject::connect(m_pUI->groupBox_powers, SIGNAL(clicked(bool)), this, SLOT(slotPowerWidgetEnabled(bool)));
@@ -53,10 +53,10 @@ cPlotsWidget::~cPlotsWidget()
     delete m_pUI;
 }
 
-void cPlotsWidget::slotConnect(int iProtocol, const QString &qstrLocalInterface, unsigned short usLocalPort, const QString &qstrPeerAddress, unsigned short usPeerPort)
+void cPlotsWidget::slotConnect(int iDataProtocol, const QString &qstrLocalInterface, unsigned short usLocalPort, const QString &qstrPeerAddress, unsigned short usPeerPort)
 {
     //Create and start the socket receiver depending on protocol
-    switch(cNetworkConnectionWidget::Protocol(iProtocol))
+    switch(cNetworkConnectionWidget::dataProtocol(iDataProtocol))
     {
     case cNetworkConnectionWidget::TCP:
         m_pSocketReceiver    = boost::make_shared<cTCPReceiver>(qstrPeerAddress.toStdString(), usPeerPort);
@@ -72,6 +72,8 @@ void cPlotsWidget::slotConnect(int iProtocol, const QString &qstrLocalInterface,
     }
 
     m_pStreamInterpreter = boost::make_shared<cSpectrometerDataStreamInterpreter>(m_pSocketReceiver);
+    m_pStreamInterpreter->setUpdateRate(33);
+
     m_pSocketReceiver->startReceiving();
 
     sigConnected();
@@ -181,7 +183,7 @@ void cPlotsWidget::getDataThreadFunction()
         //Resize plot vectors as necessary
         if((uint32_t)qvvfPlotData[0].size() != m_pStreamInterpreter->getNValuesPerChannelPerFrame())
         {
-            for(uint32_t ui = 0; ui <  qvvfPlotData.size(); ui++)
+            for(uint32_t ui = 0; ui <  (uint32_t)qvvfPlotData.size(); ui++)
             {
                 qvvfPlotData[ui].resize(m_pStreamInterpreter->getNValuesPerChannelPerFrame());
             }

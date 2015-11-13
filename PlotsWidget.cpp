@@ -19,7 +19,6 @@ using namespace std;
 cPlotsWidget::cPlotsWidget(QWidget *parent) :
     QWidget(parent),
     m_pUI(new Ui::cPlotsWidget),
-    m_pThis(this),
     m_pPowerPlotWidget(new cFramedQwtLinePlotWidget(this)),
     m_pStokesPlotWidget(new cFramedQwtLinePlotWidget(this)),
     m_pBandPowerPlotWidget(new cBandPowerQwtLinePlot(this)),
@@ -54,6 +53,7 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
 cPlotsWidget::~cPlotsWidget()
 {
     setIsRunning(false);
+
     delete m_pUI;
 }
 
@@ -66,7 +66,7 @@ void cPlotsWidget::slotConnect(int iDataProtocol, const QString &qstrLocalInterf
         m_pSocketReceiver = boost::make_shared<cTCPReceiver>(qstrPeerAddress.toStdString(), usPeerPort);
 
         //Register this class instance to get notification callbacks about socket connectivity.
-        boost::static_pointer_cast<cTCPReceiver>(m_pSocketReceiver)->registerNoticationCallbackHandler(m_pThis);
+        boost::static_pointer_cast<cTCPReceiver>(m_pSocketReceiver)->registerNoticationCallbackHandler(this);
 
         break;
 
@@ -142,9 +142,10 @@ bool cPlotsWidget::isRunning()
 
 void cPlotsWidget::setIsRunning(bool bIsRunning)
 {
-    QWriteLocker oWriteLock(&m_oMutex);
-
-    m_bIsRunning = bIsRunning;
+    {
+        QWriteLocker oWriteLock(&m_oMutex);
+        m_bIsRunning = bIsRunning;
+    }
 
     if(m_pStreamInterpreter.get())
     {

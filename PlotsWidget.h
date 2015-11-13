@@ -39,8 +39,6 @@ public:
 private:
     Ui::cPlotsWidget                                        *m_pUI;
 
-    boost::shared_ptr<cPlotsWidget>                         m_pThis; //Maintain a boost::shared pointer of this for the life of the class instace.
-
     cFramedQwtLinePlotWidget                                *m_pPowerPlotWidget;
     cFramedQwtLinePlotWidget                                *m_pStokesPlotWidget;
     cBandPowerQwtLinePlot                                   *m_pBandPowerPlotWidget;

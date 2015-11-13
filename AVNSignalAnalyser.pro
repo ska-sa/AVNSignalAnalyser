@@ -35,7 +35,8 @@ SOURCES +=\
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.cpp \
     RoachAcquistionControlWidget.cpp \
     AVNUtilLibs/Timestamp/Timestamp.cpp \
-    AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp \
+    KATCPClient.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -60,7 +61,8 @@ HEADERS  += MainWindow.h \
     AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.h \
     NetworkConnectionWidget.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h \
-    RoachAcquistionControlWidget.h
+    RoachAcquistionControlWidget.h \
+    KATCPClient.h
 
 
 FORMS    += MainWindow.ui \

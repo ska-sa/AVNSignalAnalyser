@@ -25,7 +25,7 @@ namespace Ui {
 class cPlotsWidget;
 }
 
-class cPlotsWidget : public QWidget
+class cPlotsWidget : public QWidget, public cTCPReceiver::cNotificationCallbackInterface
 {
     Q_OBJECT
 
@@ -38,6 +38,8 @@ public:
 
 private:
     Ui::cPlotsWidget                                        *m_pUI;
+
+    boost::shared_ptr<cPlotsWidget>                         m_pThis; //Maintain a boost::shared pointer of this for the life of the class instace.
 
     cFramedQwtLinePlotWidget                                *m_pPowerPlotWidget;
     cFramedQwtLinePlotWidget                                *m_pStokesPlotWidget;
@@ -60,6 +62,9 @@ private:
     void                                                    updatePlotType(uint16_t u16PlotType);
     uint16_t                                                m_u16PlotType;
 
+    void                                                    socketConnected_callback();
+    void                                                    socketDisconnected_callback();
+
 public slots:
     void                                                    slotConnect(int iProtocol, const QString &qstrLocalInterface, unsigned short usLocalPort,
                                                                         const QString &qstrPeerAddress, unsigned short usPeerPort);
@@ -75,6 +80,7 @@ signals:
     void                                                    sigConnected();
     void                                                    sigDisconnected();
     void                                                    sigConnected(bool bIsConnected);
+    void                                                    sigDisconnect();
 
 };
 

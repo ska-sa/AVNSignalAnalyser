@@ -17,8 +17,8 @@ cMainWindow::cMainWindow(QWidget *parent) :
     m_pPlotsWidget(new cPlotsWidget(this))
 {
     m_pUI->setupUi(this);
-    m_pUI->horizontalLayout_MainWindowTop->insertWidget(1, m_pNetworkGroupBox);
-    m_pUI->horizontalLayout_MainWindowTop->insertSpacerItem(2, new QSpacerItem(20, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed));
+    m_pUI->horizontalLayout_MainWindowTop->insertSpacerItem(1, new QSpacerItem(20, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed));
+    m_pUI->horizontalLayout_MainWindowTop->insertWidget(2, m_pNetworkGroupBox);
     m_pUI->verticalLayout_mainWindow->insertWidget(1, m_pPlotsWidget);
 
     connectSignalsToSlots();
@@ -40,6 +40,7 @@ void cMainWindow::connectSignalsToSlots()
     QObject::connect( m_pUI->actionExit, SIGNAL(triggered()), this, SLOT(close()));
     QObject::connect( m_pUI->actionConnect_Bind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
     QObject::connect( m_pUI->actionDisconnect_Unbind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
+    QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectedOrBound(bool)), this, SLOT(slotSetConnectedOrBound(bool)) );
 }
 
 void cMainWindow::slotSetConnectedOrBound(bool bIsConnectedOrBound)

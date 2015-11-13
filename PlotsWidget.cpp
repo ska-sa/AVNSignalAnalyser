@@ -19,6 +19,7 @@ using namespace std;
 cPlotsWidget::cPlotsWidget(QWidget *parent) :
     QWidget(parent),
     m_pUI(new Ui::cPlotsWidget),
+    m_pThis(this),
     m_pPowerPlotWidget(new cFramedQwtLinePlotWidget(this)),
     m_pStokesPlotWidget(new cFramedQwtLinePlotWidget(this)),
     m_pBandPowerPlotWidget(new cBandPowerQwtLinePlot(this)),
@@ -45,6 +46,9 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
     //Vertical lines for intergrated bandwidth
     QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pPowerPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
     QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pStokesPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
+
+    //SocketStreamer triggered disconnect
+    QObject::connect(this, SIGNAL(sigDisconnect()), this, SLOT(slotDisconnect()), Qt::QueuedConnection); //Must be queued to prevent the socket reading thread try to join itself.
 }
 
 cPlotsWidget::~cPlotsWidget()
@@ -59,7 +63,11 @@ void cPlotsWidget::slotConnect(int iDataProtocol, const QString &qstrLocalInterf
     switch(cNetworkConnectionWidget::dataProtocol(iDataProtocol))
     {
     case cNetworkConnectionWidget::TCP:
-        m_pSocketReceiver    = boost::make_shared<cTCPReceiver>(qstrPeerAddress.toStdString(), usPeerPort);
+        m_pSocketReceiver = boost::make_shared<cTCPReceiver>(qstrPeerAddress.toStdString(), usPeerPort);
+
+        //Register this class instance to get notification callbacks about socket connectivity.
+        boost::static_pointer_cast<cTCPReceiver>(m_pSocketReceiver)->registerNoticationCallbackHandler(m_pThis);
+
         break;
 
     case cNetworkConnectionWidget::UDP:
@@ -75,9 +83,6 @@ void cPlotsWidget::slotConnect(int iDataProtocol, const QString &qstrLocalInterf
     m_pStreamInterpreter->setUpdateRate(33);
 
     m_pSocketReceiver->startReceiving();
-
-    sigConnected();
-    sigConnected(true);
 
     //Start the thread which retrieves data, formats and sends to the plotter widgetts
     setIsRunning(true);
@@ -101,11 +106,11 @@ void cPlotsWidget::slotDisconnect()
 
     cout << "cPlotsWidget::slotDisconnect(): SpectrometerDataStreamInterpreter destroyed..." << endl;
 
-    cout << "cPlotsWidget::slotDisconnect(): Closing TCPReceiver..." << endl;
+    cout << "cPlotsWidget::slotDisconnect(): Closing SocketReceiver..." << endl;
 
     m_pSocketReceiver.reset();
 
-    cout << "cPlotsWidget::slotDisconnect(): TCPReceiver destroyed." << endl;
+    cout << "cPlotsWidget::slotDisconnect(): SocketReceiver destroyed." << endl;
 
     sigDisconnected();
     sigConnected(false);
@@ -485,4 +490,20 @@ void cPlotsWidget::slotBandPowerWidgetEnabled(bool bEnabled)
 
     //Remove band lines from the power plot while the band power power is hidden
     m_pPowerPlotWidget->slotShowVerticalLines(bEnabled);
+}
+
+void cPlotsWidget::socketConnected_callback()
+{
+    sigConnected();
+    sigConnected(true);
+}
+
+void cPlotsWidget::socketDisconnected_callback()
+{
+    setIsRunning(false);
+
+    sigDisconnect(); //Queued connection to slotDisconnect in this class.
+    //This will be called by the socket reading thread. so it needs to be decoupled with a queued connection
+    //The slotDisconnect asked the socket reading thread to join so this queued connection prevents the socket
+    //reading thread from joining itself.
 }

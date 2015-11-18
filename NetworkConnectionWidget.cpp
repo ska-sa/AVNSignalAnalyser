@@ -17,8 +17,6 @@ cNetworkConnectionWidget::cNetworkConnectionWidget(bool bTCPAvailable, bool bUDP
 {
     m_pUI->setupUi(this);
 
-    //m_pUI->comboBox_networkProtocol->se
-
     connectSignalsToSlots();
 
     updateAvailableProtocols();
@@ -34,6 +32,7 @@ void cNetworkConnectionWidget::connectSignalsToSlots()
 {
     QObject::connect( m_pUI->comboBox_dataProtocol, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSetDataProtocol(int)) );
     QObject::connect( m_pUI->pushButton_connectDisconnect, SIGNAL(clicked()), this, SLOT(slotConnectDisconnect()) );
+    QObject::connect( m_pUI->checkBox_KATCPControl, SIGNAL(toggled(bool)), this, SLOT(slotKATCPEnabled(bool)) );
 }
 
 void cNetworkConnectionWidget::slotSetDataProtocol(int iDataProtocol)
@@ -47,6 +46,7 @@ void cNetworkConnectionWidget::slotConnectDisconnect()
     if(m_bIsConnectedOrBound)
     {
         sigDisconnectClicked();
+        sigConnectKATCP(false);
     }
     else
     {
@@ -62,6 +62,11 @@ void cNetworkConnectionWidget::slotConnectDisconnect()
 
         default:
             return; //Shouldn't ever be reached if the GUI is correct
+        }
+
+        if(m_pUI->checkBox_KATCPControl->isChecked())
+        {
+            sigConnectKATCP(true);
         }
     }
 }
@@ -143,6 +148,27 @@ void cNetworkConnectionWidget::updateAvailableProtocols()
     {
         m_pUI->comboBox_dataProtocol->addItem(QString("UDP"));
     }
+}
 
+void  cNetworkConnectionWidget::slotKATCPEnabled(bool bEnabled)
+{
+    if(m_bIsConnectedOrBound)
+    {
+        sigConnectKATCP(bEnabled); //Relay as signal from the NetworkConnectionWidget
+    }
+}
 
+QString cNetworkConnectionWidget::getPeerAddress() const
+{
+    return m_pUI->lineEdit_server->text();
+}
+
+uint16_t cNetworkConnectionWidget::getDataPort() const
+{
+    return m_pUI->spinBox_serverPort->value();
+}
+
+uint16_t cNetworkConnectionWidget::getKATCPPort() const
+{
+    return m_pUI->spinBox_KATCPPort->value();
 }

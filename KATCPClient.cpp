@@ -2,10 +2,13 @@
 //System includes
 #include <iostream>
 #include <stdlib.h>
+#include <sstream>
 
 //Library includes
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
 #include <boost/make_shared.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/foreach.hpp>
 #endif
 
 //Local includes
@@ -13,7 +16,7 @@
 
 using namespace std;
 
-cKATCPClient::cKATCPClient(const std::string &strServerAddress, uint16_t u16Port) :
+cKATCPClient::cKATCPClient(const string &strServerAddress, uint16_t u16Port) :
     m_bDisconnectFlag(false)
 {
     connect(strServerAddress, u16Port);
@@ -29,7 +32,7 @@ cKATCPClient::~cKATCPClient()
     disconnect();
 }
 
-void cKATCPClient::connect(const std::string &strServerAddress, uint16_t u16Port)
+void cKATCPClient::connect(const string &strServerAddress, uint16_t u16Port)
 {
     cout << "cKATCPClient::connect() Starting KATCP server" << endl;
 
@@ -54,6 +57,16 @@ void cKATCPClient::disconnect()
     m_pSocketThread->join();
     m_pSocketThread.reset();
 
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->connected_callback(false);
+    }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->connected_callback(false);
+    }
+
     cout << "cKATCPClient::disconnect() KATCP disconnected." << endl;
 }
 
@@ -69,8 +82,23 @@ void cKATCPClient::threadFunction()
         if(m_pSocket->openAndConnect(m_strServerAddress, m_u16Port, 500))
             break;
 
-        cout << "Reached timeout attempting to connect to server " << m_strServerAddress << ":" << m_u16Port << ". Retrying..." << endl;
+        cout << "cKATCPClient::threadFunction() Reached timeout attempting to connect to server " << m_strServerAddress << ":" << m_u16Port << ". Retrying in 0.5 seconds..." << endl;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->connected_callback(true);
+    }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->connected_callback(true);
+    }
+
+    cout << "cKATCPClient::threadFunction() successfully connected KATCP server " << m_strServerAddress << ":" << m_u16Port << "." << endl;
+
+    requestRecordingStatus();
 
     while(!disconnectRequested())
     {
@@ -78,7 +106,10 @@ void cKATCPClient::threadFunction()
 
         do
         {
-            bFullMessage = m_pSocket->readUntil( strKATCPMessage, string("\r\n"), 2000 );
+            bFullMessage = m_pSocket->readUntil( strKATCPMessage, string("\n"), 500 );
+
+            if(disconnectRequested())
+                return;
         }
         while(!bFullMessage);
 
@@ -92,6 +123,11 @@ void cKATCPClient::recordingStarted()
     {
         m_vpCallbackHandlers[ui]->recordingStarted_callback();
     }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->recordingStarted_callback();
+    }
 }
 
 void cKATCPClient::recordingStopped()
@@ -100,23 +136,180 @@ void cKATCPClient::recordingStopped()
     {
         m_vpCallbackHandlers[ui]->recordingStopped_callback();
     }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->recordingStopped_callback();
+    }
 }
 
-void cKATCPClient::recordingInfoUpdate(int64_t i64StartTime_us, int64_t i64StopTime_us, int64_t i64EllapsedTime_us, int64_t i64TimeLeft_us)
+void cKATCPClient::recordingInfoUpdate(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
 {
     for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
     {
-        m_vpCallbackHandlers[ui]->recordingInfoUpdate_callback(i64StartTime_us, i64StopTime_us, i64EllapsedTime_us, i64TimeLeft_us);
+        m_vpCallbackHandlers[ui]->recordingInfoUpdate_callback(strFilename, i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us);
     }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        m_vpCallbackHandlers[ui]->recordingInfoUpdate_callback(strFilename, i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us);
+    }
+}
+
+void cKATCPClient::requestStartRecording(const string &strFilenamePrefix, int64_t i64StartTime_us, int64_t i64Duration_us)
+{
+    stringstream oSS;
+    oSS << string("?startRecording");
+
+    oSS << string(" ");
+    if(strFilenamePrefix.length())
+        oSS << strFilenamePrefix;
+    else
+        oSS << string("\\@"); //Empty string escape sequence for KATCP. Note actually \@ on the telnet line.
+
+    oSS << string(" ");
+    oSS << i64StartTime_us;
+
+    oSS << string(" ");
+    oSS << i64Duration_us;
+
+    oSS << string("\n");
+
+    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
+
+    m_pSocket->send(oSS.str().c_str(), oSS.str().length(), 100);
+
+    cout << "cKATCPClient::requestStartRecording() Send start recording request : " << oSS.str().c_str() << endl;
+}
+
+void cKATCPClient::requestStopRecording()
+{
+    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
+
+    m_pSocket->send("?stopRecording\n", 15, 100);
+}
+
+void cKATCPClient::requestRecordingStatus()
+{
+    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
+
+    m_pSocket->send("?getRecordingStatus\n", 20, 100);
+}
+
+void cKATCPClient::requestRecordingInfoUpdate()
+{
+    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
+
+    m_pSocket->send("?getRecordingInfo\n", 18, 100);
+}
+
+bool cKATCPClient::disconnectRequested()
+{
+    boost::shared_lock<boost::shared_mutex> oLock(m_oFlagMutex);
+
+    return m_bDisconnectFlag;
+}
+
+void cKATCPClient::processKATCPMessage(const string &strMessage)
+{
+    cout << "Got KATCP message: " << strMessage << endl;
+
+    //Tokenise string and store tokens in a vector
+    vector<string> vstrTokens = tokeniseString(strMessage, string(" "));
+
+    if(!vstrTokens.size())
+        return;
+
+    try
+    {
+        if( !vstrTokens[0].compare(0, 17, "#recordingStopped") )
+        {
+            recordingStopped();
+            return;
+        }
+    }
+    catch(out_of_range &oError)
+    {
+    }
+
+
+    try
+    {
+        if(!vstrTokens[0].compare(0, 17, "#recordingStarted"))
+        {
+            recordingStarted();
+            return;
+        }
+    }
+    catch(out_of_range &oError)
+    {
+    }
+
+    try
+    {
+        if(!vstrTokens[0].compare(0, 14, "#recordingInfo"))
+        {
+            if(vstrTokens.size() < 6)
+                return;
+
+            int64_t i64StartTime_us     = strtoll(vstrTokens[2].c_str(), NULL, 10);
+            int64_t i64EllapsedTime_us  = strtoll(vstrTokens[3].c_str(), NULL, 10);
+            int64_t i64StopTime_us      = strtoll(vstrTokens[4].c_str(), NULL, 10);
+            int64_t i64TimeLeft_us      = strtoll(vstrTokens[5].c_str(), NULL, 10);
+
+            recordingInfoUpdate(vstrTokens[1], i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us);
+
+            return;
+        }
+    }
+    catch(out_of_range &oError)
+    {
+    }
+}
+
+void cKATCPClient::registerCallbackHandler(cCallbackInterface *pNewHandler)
+{
+    boost::unique_lock<boost::shared_mutex> oLock(m_oCallbackHandlersMutex);
+
+    m_vpCallbackHandlers.push_back(pNewHandler);
+
+    cout << "cKATCPClient::::registerCallbackHandler(): Successfully registered callback handler: " << pNewHandler << endl;
 }
 
 void cKATCPClient::registerCallbackHandler(boost::shared_ptr<cCallbackInterface> pNewHandler)
 {
     boost::unique_lock<boost::shared_mutex> oLock(m_oCallbackHandlersMutex);
 
-    m_vpCallbackHandlers.push_back(pNewHandler);
+    m_vpCallbackHandlers_shared.push_back(pNewHandler);
 
-    cout << "cKATCPClient::registerCallbackHandler(): Successfully registered callback handler: " << pNewHandler.get() << endl;
+    cout << "cKATCPClient::::registerCallbackHandler(): Successfully registered callback handler: " << pNewHandler.get() << endl;
+}
+
+void cKATCPClient::deregisterCallbackHandler(cCallbackInterface *pHandler)
+{
+    boost::unique_lock<boost::shared_mutex> oLock(m_oCallbackHandlersMutex);
+    bool bSuccess = false;
+
+    //Search for matching pointer values and erase
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size();)
+    {
+        if(m_vpCallbackHandlers[ui] == pHandler)
+        {
+            m_vpCallbackHandlers.erase(m_vpCallbackHandlers.begin() + ui);
+
+            cout << "cKATCPClient::deregisterCallbackHandler(): Deregistered callback handler: " << pHandler << endl;
+            bSuccess = true;
+        }
+        else
+        {
+            ui++;
+        }
+    }
+
+    if(!bSuccess)
+    {
+        cout << "cKATCPClient::::deregisterCallbackHandler(): Warning: Deregistering callback handler: " << pHandler << " failed. Object instance not found." << endl;
+    }
 }
 
 void cKATCPClient::deregisterCallbackHandler(boost::shared_ptr<cCallbackInterface> pHandler)
@@ -125,11 +318,11 @@ void cKATCPClient::deregisterCallbackHandler(boost::shared_ptr<cCallbackInterfac
     bool bSuccess = false;
 
     //Search for matching pointer values and erase
-    for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size();)
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size();)
     {
-        if(m_vpCallbackHandlers[ui].get() == pHandler.get())
+        if(m_vpCallbackHandlers_shared[ui].get() == pHandler.get())
         {
-            m_vpCallbackHandlers.erase(m_vpCallbackHandlers.begin() + ui);
+            m_vpCallbackHandlers_shared.erase(m_vpCallbackHandlers_shared.begin() + ui);
 
             cout << "cKATCPClient::deregisterCallbackHandler(): Deregistered callback handler: " << pHandler.get() << endl;
             bSuccess = true;
@@ -146,56 +339,21 @@ void cKATCPClient::deregisterCallbackHandler(boost::shared_ptr<cCallbackInterfac
     }
 }
 
-bool cKATCPClient::disconnectRequested()
+std::vector<std::string> cKATCPClient::tokeniseString(const std::string &strInputString, const std::string &strSeparators)
 {
-    boost::shared_lock<boost::shared_mutex> oLock(m_oFlagMutex);
+    //This funciton is not complete efficient due to extra memory copies of filling the std::vector
+    //It will also be copied again on return.
+    //It does simply the calling code and should be adequate in the context of most KATCP control clients.
 
-    return m_bDisconnectFlag;
-}
+    boost::char_separator<char> oSeparators(strSeparators.c_str());
+    boost::tokenizer< boost::char_separator<char> > oTokens(strInputString, oSeparators);
 
-void cKATCPClient::processKATCPMessage(const std::string &strMessage)
-{
-    cout << "Got KATCP message" << strMessage << endl;
+    vector<string> vstrTokens;
 
-    try
+    for(boost::tokenizer< boost::char_separator<char> >::iterator it = oTokens.begin(); it != oTokens.end(); ++it)
     {
-        if(!strMessage.compare(0, 16, "recordingStopped"))
-        {
-            recordingStopped();
-            return;
-        }
-    }
-    catch(std::out_of_range &oError)
-    {
+        vstrTokens.push_back(*it);
     }
 
-
-    try
-    {
-
-        if(!strMessage.compare(0, 16, "recordingStarted"))
-        {
-            recordingStarted();
-            return;
-        }
-    }
-    catch(std::out_of_range &oError)
-    {
-    }
-
-    try
-    {
-        if(!strMessage.compare(0, 16, "recordingInfoUpdate"))
-        {
-            //int64_t i64StartTime_us     = strtoll(arg_string_katcp(pKATCPDispatch, 1), NULL, 10);
-            //int64_t i64StopTime_us      = strtoll(arg_string_katcp(pKATCPDispatch, 2), NULL, 10);
-            //int64_t i64EllapsedTime_us  = strtoll(arg_string_katcp(pKATCPDispatch, 3), NULL, 10);
-            //int64_t i64TimeLeft_us      = strtoll(arg_string_katcp(pKATCPDispatch, 4), NULL, 10);
-
-            return;
-        }
-    }
-    catch(std::out_of_range &oError)
-    {
-    }
+    return vstrTokens;
 }

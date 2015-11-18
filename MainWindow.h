@@ -6,10 +6,12 @@
 //Library includes
 #include <QMainWindow>
 #include <QVector>
+#include <QScopedPointer>
 
 //Local includes
 #include "NetworkConnectionWidget.h"
 #include "PlotsWidget.h"
+#include "RoachAcquistionControlWidget.h"
 
 namespace Ui {
 class cMainWindow;
@@ -24,15 +26,17 @@ public:
     ~cMainWindow();
 
 private:
-    Ui::cMainWindow                 *m_pUI;
-    cNetworkConnectionWidget        *m_pNetworkGroupBox;
-    cPlotsWidget                    *m_pPlotsWidget;
+    Ui::cMainWindow                                 *m_pUI;
+    cNetworkConnectionWidget                        *m_pNetworkGroupBox;
+    cPlotsWidget                                    *m_pPlotsWidget;
+    QScopedPointer<cRoachAcquistionControlWidget>   m_pAquisitionWidget;
 
-    void                            connectSignalsToSlots();
+    void                                            connectSignalsToSlots();
 
 private slots:
-    void                            slotSetConnectedOrBound(bool bIsConnectedOrBound);
-    void                            slotSetKATCPConnected(bool bIsKATCPConnected);
+    void                                            slotSetConnectedOrBound(bool bIsConnectedOrBound);
+    void                                            slotKATCPEnabled(bool bEnabled);
+    void                                            slotSetKATCPConnected(bool bIsKATCPConnected);
 };
 
 #endif // MAINWINDOW_H

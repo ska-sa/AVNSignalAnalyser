@@ -41,6 +41,7 @@ void cMainWindow::connectSignalsToSlots()
     QObject::connect( m_pUI->actionConnect_Bind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
     QObject::connect( m_pUI->actionDisconnect_Unbind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectedOrBound(bool)), this, SLOT(slotSetConnectedOrBound(bool)) );
+    QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectKATCP(bool)), this, SLOT(slotKATCPEnabled(bool)) );
 }
 
 void cMainWindow::slotSetConnectedOrBound(bool bIsConnectedOrBound)
@@ -50,8 +51,33 @@ void cMainWindow::slotSetConnectedOrBound(bool bIsConnectedOrBound)
     m_pUI->actionDisconnect_Unbind->setEnabled(bIsConnectedOrBound);
 }
 
+void cMainWindow::slotKATCPEnabled(bool bEnabled)
+{
+    if(bEnabled)
+    {
+        cout << "cMainWindow::slotKATCPEnabled() Starting KATCP client" << endl;
+
+        m_pAquisitionWidget.reset( new cRoachAcquistionControlWidget(m_pNetworkGroupBox->getPeerAddress(), m_pNetworkGroupBox->getKATCPPort()) );
+        QObject::connect(m_pAquisitionWidget.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)), Qt::QueuedConnection);
+        QObject::connect( m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue, SIGNAL(triggered()), m_pAquisitionWidget.data(), SLOT(show()) );
+
+        cout << "cMainWindow::slotKATCPEnabled() KATCP client started..." << endl;
+    }
+    else
+    {
+        cout << "cMainWindow::slotKATCPEnabled() Stopping KATCP client" << endl;
+
+        QObject::disconnect(m_pAquisitionWidget.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)));
+        QObject::disconnect( m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue, SIGNAL(triggered()), m_pAquisitionWidget.data(), SLOT(show()) );
+        m_pAquisitionWidget.reset();
+
+        cout << "cMainWindow::slotKATCPEnabled() KATCP client terminated..." << endl;
+    }
+}
+
 void cMainWindow::slotSetKATCPConnected(bool bIsKATCPConnected)
 {
     //Update menu entry
     m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue->setEnabled(bIsKATCPConnected);
+    m_pAquisitionWidget->show();
 }

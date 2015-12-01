@@ -1,6 +1,7 @@
 <RCC>
-    <qresource prefix="/Images">
-        <file>Images/AVNLogo.png</file>
-        <file>Images/SKALogo.png</file>
-    </qresource>
+  <qresource prefix="/Images">
+    <file>Images/AVNLogo.ico</file>
+    <file>Images/AVNLogo.png</file>
+    <file>Images/SKALogo.png</file>
+  </qresource>
 </RCC>

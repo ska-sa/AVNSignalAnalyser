@@ -45,7 +45,7 @@ HEADERS  += MainWindow.h \
     AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingUDPSocket.h \
     AVNAppLibs/SocketStreamers/TCPReceiver/TCPReceiver.h \
     PlotsWidget.h \
-    AVNDataTypes/SpectrometerDataStream/SpetrometerDefinitions.h \
+    AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.h \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.h \
     AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.h \
@@ -96,21 +96,21 @@ unix{
 win32{
     #Qwt
     DEFINES    += QT_DLL QWT_DLL
-    LIBS += -LC://DevLibs//qwt-6.1.0//lib
+    LIBS += -LC://DevLibs//qwt-6.1.2//lib
     CONFIG(debug, debug|release) {
         LIBS += -lqwtd
     } else {
         LIBS += -lqwt
     }
-    INCLUDEPATH +=  C://DevLibs//qwt-6.1.0//src
+    INCLUDEPATH +=  C://DevLibs//qwt-6.1.2//src
 
     #Boost
     CONFIG(debug, debug|release) {
-        LIBS += -LC:\\DevLibs\\boost\\boost_1_55_0\\lib64-msvc-10.0 -lboost_system-vc100-mt-gd-1_55 -lboost_thread-vc100-mt-gd-1_55 -lboost_chrono-vc100-mt-gd-1_55
+        LIBS += -LC:\\DevLibs\\boost_1_59_0\\stage\\lib libboost_system-vc120-mt-gd-1_59.lib libboost_thread-vc120-mt-gd-1_59.lib libboost_chrono-vc120-mt-gd-1_59.lib
     } else {
-        LIBS += -LC:\\DevLibs\\boost\\boost_1_55_0\\lib64-msvc-10.0 -lboost_system-vc100-mt-1_55 -lboost_thread-vc100-mt-1_55 -lboost_chrono-vc100-mt-1_55
+        LIBS += -LC:\\DevLibs\\boost_1_59_0\\stage\\lib libboost_system-vc120-mt-1_59.lib libboost_thread-vc120-mt-1_59.lib libboost_chrono-vc120-mt-1_59.lib
     }
-    INCLUDEPATH += C:\\DevLibs\\boost\\boost_1_55_0
+    INCLUDEPATH += C:\\DevLibs\\boost_1_59_0
 
     #Winsock
     LIBS += Ws2_32.lib

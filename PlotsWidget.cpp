@@ -235,7 +235,7 @@ void cPlotsWidget::getDataThreadFunction()
 void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 {
     //Only use lowest 4 bits
-    u16PlotType = 0b0000000000001111 & u16PlotType;
+    u16PlotType = 0x000F & u16PlotType;
 
     //If the plot is the same do nothing
     if(m_u16PlotType == u16PlotType)

@@ -7,6 +7,7 @@
 //Library includes
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #endif

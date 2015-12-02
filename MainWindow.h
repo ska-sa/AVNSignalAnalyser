@@ -37,6 +37,7 @@ private slots:
     void                                            slotSetConnectedOrBound(bool bIsConnectedOrBound);
     void                                            slotKATCPEnabled(bool bEnabled);
     void                                            slotSetKATCPConnected(bool bIsKATCPConnected);
+    void                                            slotOpenAboutDialog();
 };
 
 #endif // MAINWINDOW_H

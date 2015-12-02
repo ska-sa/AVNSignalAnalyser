@@ -36,7 +36,8 @@ SOURCES +=\
     RoachAcquistionControlWidget.cpp \
     AVNUtilLibs/Timestamp/Timestamp.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp \
-    KATCPClient.cpp
+    KATCPClient.cpp \
+    AboutDialog.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -62,7 +63,8 @@ HEADERS  += MainWindow.h \
     NetworkConnectionWidget.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h \
     RoachAcquistionControlWidget.h \
-    KATCPClient.h
+    KATCPClient.h \
+    AboutDialog.h
 
 
 FORMS    += MainWindow.ui \
@@ -70,7 +72,8 @@ FORMS    += MainWindow.ui \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.ui \
     AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.ui \
     NetworkConnectionWidget.ui \
-    RoachAcquistionControlWidget.ui
+    RoachAcquistionControlWidget.ui \
+    AboutDialog.ui
 
 RESOURCES += \
     Images.qrc

@@ -7,6 +7,7 @@
 //Local includes
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
+#include "AboutDialog.h"
 
 using namespace std;
 
@@ -42,6 +43,7 @@ void cMainWindow::connectSignalsToSlots()
     QObject::connect( m_pUI->actionDisconnect_Unbind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectedOrBound(bool)), this, SLOT(slotSetConnectedOrBound(bool)) );
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectKATCP(bool)), this, SLOT(slotKATCPEnabled(bool)) );
+    QObject::connect ( m_pUI->actionAbout, SIGNAL ( triggered()), this, SLOT ( slotOpenAboutDialog() ) );
 }
 
 void cMainWindow::slotSetConnectedOrBound(bool bIsConnectedOrBound)
@@ -80,4 +82,12 @@ void cMainWindow::slotSetKATCPConnected(bool bIsKATCPConnected)
     //Update menu entry
     m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue->setEnabled(bIsKATCPConnected);
     m_pAquisitionWidget->show();
+}
+
+void cMainWindow::slotOpenAboutDialog()
+{
+    cAboutDialog oAboutDialog(this);
+    oAboutDialog.layout()->setSizeConstraint( QLayout::SetFixedSize );
+    oAboutDialog.show();
+    oAboutDialog.exec();
 }

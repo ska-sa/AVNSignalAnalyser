@@ -29,6 +29,21 @@
    <string>Network</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_5">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <property name="horizontalSpacing">
@@ -38,6 +53,7 @@
       <widget class="QLabel" name="label_2">
        <property name="font">
         <font>
+         <pointsize>8</pointsize>
          <weight>75</weight>
          <bold>true</bold>
         </font>
@@ -51,6 +67,7 @@
       <widget class="QLabel" name="label_6">
        <property name="font">
         <font>
+         <pointsize>8</pointsize>
          <weight>75</weight>
          <bold>true</bold>
         </font>
@@ -73,6 +90,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Server</string>
          </property>
@@ -80,6 +102,11 @@
        </item>
        <item>
         <widget class="QLineEdit" name="lineEdit_server">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>192.168.2.178</string>
          </property>
@@ -87,6 +114,11 @@
        </item>
        <item>
         <widget class="QLabel" name="label_8">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>:</string>
          </property>
@@ -94,6 +126,11 @@
        </item>
        <item>
         <widget class="QSpinBox" name="spinBox_serverPort">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="maximum">
           <number>65535</number>
          </property>
@@ -114,6 +151,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Protocol:</string>
          </property>
@@ -121,6 +163,11 @@
        </item>
        <item>
         <widget class="QComboBox" name="comboBox_dataProtocol">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <item>
           <property name="text">
            <string>TCP</string>
@@ -135,6 +182,11 @@
        </item>
        <item>
         <spacer name="horizontalSpacer_2">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -152,6 +204,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
         <widget class="QLabel" name="label_interface">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Local interface</string>
          </property>
@@ -159,6 +216,11 @@
        </item>
        <item>
         <widget class="QLineEdit" name="lineEdit_interface">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>0.0.0.0</string>
          </property>
@@ -166,6 +228,11 @@
        </item>
        <item>
         <widget class="QLabel" name="label_localColon">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>:</string>
          </property>
@@ -173,6 +240,11 @@
        </item>
        <item>
         <widget class="QSpinBox" name="spinBox_localPort">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="maximum">
           <number>65535</number>
          </property>
@@ -185,6 +257,11 @@
      </item>
      <item row="1" column="1">
       <widget class="QCheckBox" name="checkBox_KATCPControl">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Enable KATCP Control</string>
        </property>
@@ -194,6 +271,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
         <widget class="QLabel" name="label_KATCPPort">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Port </string>
          </property>
@@ -201,6 +283,11 @@
        </item>
        <item>
         <widget class="QSpinBox" name="spinBox_KATCPPort">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="maximum">
           <number>65535</number>
          </property>
@@ -211,6 +298,11 @@
        </item>
        <item>
         <spacer name="horizontalSpacer">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -226,6 +318,11 @@
      </item>
      <item row="1" column="3">
       <widget class="QPushButton" name="pushButton_connectDisconnect">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Connect </string>
        </property>

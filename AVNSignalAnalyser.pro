@@ -79,26 +79,48 @@ RESOURCES += \
     Images.qrc
 
 unix{
-    #X11 (required for osgEarth rendering)
-    LIBS += -lX11
+    message(Detected Linux / Unix OS.)
 
-    #Qwt Ubuntu:
-    #DEFINES    += QT_DLL QWT_DLL
-    #LIBS += -lqwt
-    #INCLUDEPATH += /usr/include/qwt
-
-    #Qwt Gentoo:
+    #Use Qt and Qwt from shared libs (For LGPL compliance)
     DEFINES    += QT_DLL QWT_DLL
-    LIBS += -lqwt6
-    INCLUDEPATH += /usr/include/qwt6
 
-    #Boost
+    #Distro specific library includes (caters for varying library names and paths)
+    #Currently this is Qwt linking and includes
+    SYSTEM_VERSION = $$system( cat /proc/version)
+    message( "System version string: $$SYSTEM_VERSION" )
+
+    SYSTEM_GENTOO = $$system( cat /proc/version | grep -o Gentoo )
+    contains( SYSTEM_GENTOO, Gentoo ) {
+        message( "Detected Gentoo Distrution." )
+        LIBS += -lqwt6
+        INCLUDEPATH += /usr/include/qwt6
+    }
+
+    SYSTEM_UBUNTU = $$system( cat /proc/version | grep -o Ubuntu )
+    contains( SYSTEM_UBUNTU, Ubuntu ) {
+        message( "Detected Ubuntu Distrution." )
+        LIBS += -lqwt
+        INCLUDEPATH += /usr/include/qwt
+    }
+
+    SYSTEM_DEBIAN = $$system( cat /proc/version | grep -o Debian )
+    contains( SYSTEM_DEBIAN, Debian ) {
+        message( "Detected Debian Distrution." )
+        LIBS += -lqwt
+        INCLUDEPATH += /usr/include/qwt
+    }
+
+    #Boost seems to be ubiquitous across distros
     LIBS += -lboost_system -lboost_thread -lboost_chrono
 }
 
 win32{
-    #Qwt
+    message(Detected Windows OS.)
+
+    #Use Qt and Qwt from shared libs (For LGPL compliance)
     DEFINES    += QT_DLL QWT_DLL
+
+    #Qwt
     LIBS += -LC://DevLibs//qwt-6.1.2//lib
     CONFIG(debug, debug|release) {
         LIBS += -lqwtd
@@ -119,7 +141,7 @@ win32{
     LIBS += Ws2_32.lib
 
 
-    #Set application executable icon:
+    #Set application executable icon with this file:
     RC_FILE = AVNSignalAnalyser_win32.rc
 
 }

@@ -45,10 +45,16 @@
      <property name="title">
       <string>Powers</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
      <property name="checkable">
       <bool>true</bool>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_powers">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <property name="leftMargin">
        <number>0</number>
       </property>
@@ -73,6 +79,9 @@
      </property>
      <property name="title">
       <string>Stokes</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -106,10 +115,29 @@
      <property name="title">
       <string>Band Power</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
      <property name="checkable">
       <bool>true</bool>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_bandPower"/>
+     <layout class="QHBoxLayout" name="horizontalLayout_bandPower">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+     </layout>
     </widget>
    </item>
   </layout>

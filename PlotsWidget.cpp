@@ -464,6 +464,10 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
     //Store the current plot type
     m_u16PlotType = u16PlotType;
+
+    //Strobe auto scale:
+    m_pPowerPlotWidget->strobeAutoscale();
+    m_pStokesPlotWidget->strobeAutoscale();
 }
 
 void cPlotsWidget::slotPowerWidgetEnabled(bool bEnabled)

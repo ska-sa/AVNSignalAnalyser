@@ -22,6 +22,8 @@ cMainWindow::cMainWindow(QWidget *parent) :
     m_pUI->horizontalLayout_MainWindowTop->insertWidget(2, m_pNetworkGroupBox);
     m_pUI->verticalLayout_mainWindow->insertWidget(1, m_pPlotsWidget);
 
+    statusBar()->hide(); //Status bar not used at present ...screen real estate
+
     connectSignalsToSlots();
 
     cout << "cMainWindow::cMainWindow() Thread is: " << QThread::currentThread() << endl;

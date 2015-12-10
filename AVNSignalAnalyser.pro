@@ -22,11 +22,8 @@ SOURCES +=\
     AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.cpp \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.cpp \
     AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.cpp \
-    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.cpp \
     AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.cpp \
     AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.cpp \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotDistancePicker.cpp \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.cpp \
     AVNGUILibs/QwtPlotting/CursorCentredQwtPlotMagnifier.cpp \
     AVNGUILibs/QwtPlotting/AnimatedQwtPlotZoomer.cpp \
     AVNAppLibs/SocketStreamers/SocketReceiverBase.cpp \
@@ -37,7 +34,13 @@ SOURCES +=\
     AVNUtilLibs/Timestamp/Timestamp.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp \
     KATCPClient.cpp \
-    AboutDialog.cpp
+    AboutDialog.cpp \
+    AVNGUILibs/QwtPlotting/WaterfallQwtPlotWidget.cpp \
+    AVNGUILibs/QwtPlotting/WaterfallPlotSpectromgramData.cpp \
+    AVNGUILibs/QwtPlotting/WallTimeQwtScaleDraw.cpp \
+    AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.cpp \
+    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.cpp \
+    AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -50,12 +53,9 @@ HEADERS  += MainWindow.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerHeader.h \
     AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.h \
     AVNGUILibs/QwtPlotting/FramedQwtLinePlotWidget.h \
-    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.h \
     AVNGUILibs/QwtPlotting/ScrollingQwtLinePlotWidget.h \
     AVNGUILibs/QwtPlotting/BandPowerQwtLinePlotWidget.h \
     AVNUtilLibs/Timestamp/Timestamp.h \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotDistancePicker.h \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotPositionPicker.h \
     AVNGUILibs/QwtPlotting/CursorCentredQwtPlotMagnifier.h \
     AVNGUILibs/QwtPlotting/AnimatedQwtPlotZoomer.h \
     AVNAppLibs/SocketStreamers/SocketReceiverBase.h \
@@ -64,16 +64,21 @@ HEADERS  += MainWindow.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h \
     RoachAcquistionControlWidget.h \
     KATCPClient.h \
-    AboutDialog.h
+    AboutDialog.h \
+    AVNGUILibs/QwtPlotting/WaterfallQwtPlotWidget.h \
+    AVNGUILibs/QwtPlotting/WaterfallPlotSpectromgramData.h \
+    AVNGUILibs/QwtPlotting/WallTimeQwtScaleDraw.h \
+    AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.h \
+    AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.h \
+    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.h
 
 
 FORMS    += MainWindow.ui \
     PlotsWidget.ui \
-    AVNGUILibs/QwtPlotting/BasicQwtLinePlotWidget.ui \
-    AVNGUILibs/QwtPlotting/QwtWaterfallPlotWidget.ui \
     NetworkConnectionWidget.ui \
     RoachAcquistionControlWidget.ui \
-    AboutDialog.ui
+    AboutDialog.ui \
+    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.ui
 
 RESOURCES += \
     Images.qrc
@@ -139,7 +144,6 @@ win32{
 
     #Winsock
     LIBS += Ws2_32.lib
-
 
     #Set application executable icon with this file:
     RC_FILE = AVNSignalAnalyser_win32.rc

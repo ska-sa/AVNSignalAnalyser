@@ -1,5 +1,6 @@
 //System includes
 #include <iostream>
+#include <cmath>
 
 //Library includes
 #include <QtConcurrentRun>
@@ -20,34 +21,38 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
     QWidget(parent),
     m_pUI(new Ui::cPlotsWidget),
     m_pPowerPlotWidget(new cFramedQwtLinePlotWidget(this)),
-    m_pStokesPlotWidget(new cFramedQwtLinePlotWidget(this)),
+    m_pStokesPhasePlotWidget(new cFramedQwtLinePlotWidget(this)),
     m_pBandPowerPlotWidget(new cBandPowerQwtLinePlot(this)),
     m_bPowerEnabled(true),
-    m_bStokesEnabled(true),
+    m_bStokesPhaseEnabled(true),
     m_bBandPowerEnabled(true)
 {
     m_pUI->setupUi(this);
 
     m_pUI->horizontalLayout_powers->insertWidget(0, m_pPowerPlotWidget);
-    m_pUI->horizontalLayout_stokes->insertWidget(0, m_pStokesPlotWidget);
+    m_pUI->horizontalLayout_stokesPhase->insertWidget(0, m_pStokesPhasePlotWidget);
     m_pUI->horizontalLayout_bandPower->insertWidget(0, m_pBandPowerPlotWidget);
 
-    //Use differnt colours for Stokes assumes 2 channels
-    m_pStokesPlotWidget->m_qveCurveColours.erase(m_pStokesPlotWidget->m_qveCurveColours.begin(), m_pStokesPlotWidget->m_qveCurveColours.begin() + 2);
+    //Use differnt colours for StokesPhase assumes 2 channels
+    m_pStokesPhasePlotWidget->m_qveCurveColours.erase(m_pStokesPhasePlotWidget->m_qveCurveColours.begin(), m_pStokesPhasePlotWidget->m_qveCurveColours.begin() + 2);
 
     m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1, QString("s")); //Band power span is in seconds:
 
     //Plot enabling/disabling
     QObject::connect(m_pUI->groupBox_powers, SIGNAL(clicked(bool)), this, SLOT(slotPowerWidgetEnabled(bool)));
-    QObject::connect(m_pUI->groupBox_stokes, SIGNAL(clicked(bool)), this, SLOT(slotStokesWidgetEnabled(bool)));
+    QObject::connect(m_pUI->groupBox_stokesPhase, SIGNAL(clicked(bool)), this, SLOT(slotStokesPhaseWidgetEnabled(bool)));
     QObject::connect(m_pUI->groupBox_bandPower, SIGNAL(clicked(bool)), this, SLOT(slotBandPowerWidgetEnabled(bool)));
 
     //Vertical lines for intergrated bandwidth
     QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pPowerPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
-    QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pStokesPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
+    QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pStokesPhasePlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
 
     //SocketStreamer triggered disconnect
     QObject::connect(this, SIGNAL(sigDisconnect()), this, SLOT(slotDisconnect()), Qt::QueuedConnection); //Must be queued to prevent the socket reading thread try to join itself.
+
+    //Connect Zoom of X axis together
+    QObject::connect(m_pPowerPlotWidget, SIGNAL(sigXScaleDivChanged(double,double)), m_pStokesPhasePlotWidget, SLOT(slotUpdateXScaleDiv(double,double)) );
+    QObject::connect(m_pStokesPhasePlotWidget, SIGNAL(sigXScaleDivChanged(double,double)), m_pPowerPlotWidget, SLOT(slotUpdateXScaleDiv(double,double)) );
 }
 
 cPlotsWidget::~cPlotsWidget()
@@ -119,7 +124,7 @@ void cPlotsWidget::slotDisconnect()
 void cPlotsWidget::slotPausePlots(bool bPause)
 {
     m_pPowerPlotWidget->slotPause(bPause);
-    m_pStokesPlotWidget->slotPause(bPause);
+    m_pStokesPhasePlotWidget->slotPause(bPause);
     m_pBandPowerPlotWidget->slotPause(bPause);
 }
 
@@ -167,14 +172,17 @@ void cPlotsWidget::getDataThreadFunction()
     qvu32PowerLRChanList.push_back(0);
     qvu32PowerLRChanList.push_back(1);
 
-    QVector<uint32_t> qvu32StokesQUChanList;
-    qvu32StokesQUChanList.push_back(2);
-    qvu32StokesQUChanList.push_back(3);
+    QVector<uint32_t> qvu32StokesPhaseQUChanList;
+    qvu32StokesPhaseQUChanList.push_back(2);
+    qvu32StokesPhaseQUChanList.push_back(3);
 
-    float *fpPowerLeft = NULL;
-    float *fpPowerRight = NULL;
-    float *fpStokesQ = NULL;
-    float *fpStokesU = NULL;
+    QVector<uint32_t> qvu32RelativePhaseChanList;
+    qvu32RelativePhaseChanList.push_back(2);
+
+    float *fpChan0 = NULL;
+    float *fpChan1 = NULL;
+    float *fpChan2 = NULL;
+    float *fpChan3 = NULL;
 
     while(isRunning())
     {
@@ -196,37 +204,98 @@ void cPlotsWidget::getDataThreadFunction()
         }
 
         //Some pointers for copying data values
-        fpPowerLeft = &qvvfPlotData[0].front();
-        fpPowerRight = &qvvfPlotData[1].front();
-        fpStokesQ = &qvvfPlotData[2].front();
-        fpStokesU = &qvvfPlotData[3].front();
+        fpChan0 = &qvvfPlotData[0].front();
+        fpChan1 = &qvvfPlotData[1].front();
+        fpChan2 = &qvvfPlotData[2].front();
+        fpChan3 = &qvvfPlotData[3].front();
 
         //Update plotting widget to plot data correctly
         updatePlotType(m_pStreamInterpreter->getLastHeader().getDigitiserType());
 
         while(isRunning())
         {
+            //Some pointers for copying data values
+            fpChan0 = &qvvfPlotData[0].front();
+            fpChan1 = &qvvfPlotData[1].front();
+            fpChan2 = &qvvfPlotData[2].front();
+            fpChan3 = &qvvfPlotData[3].front();
+
+
             //Get the data from the next frame. Return false means an inconsistency was incountered
-            if(!m_pStreamInterpreter->getNextFrame(fpPowerLeft, fpPowerRight, fpStokesQ, fpStokesU, qvvfPlotData[0].size()))
+            if(!m_pStreamInterpreter->getNextFrame(fpChan0, fpChan1, fpChan2, fpChan3, qvvfPlotData[0].size()))
             {
                 break; //Causes resync
             }
 
-            QReadLocker oLock(&m_oMutex);
-
-            if(m_bPowerEnabled)
+            //Calculate  phase for LRPP mode
+            switch(m_pStreamInterpreter->getLastHeader().getDigitiserType())
             {
-                m_pPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32PowerLRChanList);
+            case AVN::Spectrometer::WB_SPECTROMETER_LRPP:
+            case AVN::Spectrometer::NB_SPECTROMETER_LRPP:
+            {
+                for(uint32_t ui = 0; ui < (uint32_t)qvvfPlotData[0].size(); ui++)
+                {
+                    //Phase calculations: Store relative phase between ADC0 and ADC1 in Chan2 in progressive frequency bins
+                    //Phase for ADC0 and ADC1 in channels 2 and 3 respectively
+
+                    //Phase is calculated in FPGA as a Fixed 18_15 value in radians (18 bits. 15 lower 15 of which are fractional).
+                    //The decimal point is ignored and the values are accumulated to a 32 bit signed integer
+                    //for interpretation by a x86 platform.
+                    //So we need to rescale back to radians:
+
+                    *fpChan2 = ( *fpChan2 / 32768) - ( *fpChan3  / 32768);
+
+                    fpChan2++;
+                    fpChan3++;
+                }
+
+                QReadLocker oLock(&m_oMutex);
+
+                if(m_bPowerEnabled)
+                {
+                    m_pPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32PowerLRChanList);
+                }
+
+                if(m_bStokesPhaseEnabled)
+                {
+                    m_pStokesPhasePlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32RelativePhaseChanList);
+                }
+
+                if(m_bBandPowerEnabled)
+                {
+                    m_pBandPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32PowerLRChanList);
+                }
+
+                break;
             }
 
-            if(m_bStokesEnabled)
+            case AVN::Spectrometer::WB_SPECTROMETER_LRQU:
+            case AVN::Spectrometer::NB_SPECTROMETER_LRQU:
             {
-                m_pStokesPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32StokesQUChanList);
+                QReadLocker oLock(&m_oMutex);
+
+                if(m_bPowerEnabled)
+                {
+                    m_pPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32PowerLRChanList);
+                }
+
+                if(m_bStokesPhaseEnabled)
+                {
+                    m_pStokesPhasePlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us(), qvu32StokesPhaseQUChanList);
+                }
+
+                if(m_bBandPowerEnabled)
+                {
+                    m_pBandPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us());
+                }
+
+                break;
             }
 
-            if(m_bBandPowerEnabled)
+            default:
             {
-                m_pBandPowerPlotWidget->addData(qvvfPlotData, m_pStreamInterpreter->getLastHeader().getTimestamp_us());
+            }
+
             }
         }
     }
@@ -246,7 +315,9 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     {
     case AVN::Spectrometer::WB_SPECTROMETER_LRQU:
     {
-        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - L and R Circular Polarisation"));
+        m_pUI->groupBox_stokesPhase->setTitle(QString("Stokes Q / U"));
+
+        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - Relative Power - LCP / RCP"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
@@ -256,15 +327,15 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("RCP     "));
         m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setTitle(QString("WB Spectrometer - Stokes Q and U"));
-        m_pStokesPlotWidget->setYLabel(QString("Power"));
-        m_pStokesPlotWidget->setYUnit(QString(""));
-        m_pStokesPlotWidget->setXLabel(QString("Frequency"));
-        m_pStokesPlotWidget->setXUnit(QString("MHz"));
+        m_pStokesPhasePlotWidget->setTitle(QString("WB Spectrometer - Stokes Q / U"));
+        m_pStokesPhasePlotWidget->setYLabel(QString("Power"));
+        m_pStokesPhasePlotWidget->setYUnit(QString(""));
+        m_pStokesPhasePlotWidget->setXLabel(QString("Frequency"));
+        m_pStokesPhasePlotWidget->setXUnit(QString("MHz"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("Stokes Q"));
         qvqstrCurveNames.push_back(QString("Stokes U"));
-        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pStokesPhasePlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
@@ -279,7 +350,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("Stokes U"));
         m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setXSpan(0.0, 400.0);
+        m_pStokesPhasePlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
         m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, QString("MHz"));
 
@@ -287,16 +358,18 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
-        m_pStokesPlotWidget->enableRejectData(false);
+        m_pStokesPhasePlotWidget->enableRejectData(false);
         m_pBandPowerPlotWidget->enableRejectData(false);
 
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Wideband Spectrometer LRQU" << endl;
         break;
     }
 
-    case AVN::Spectrometer::WB_SPECTROMETER_CFFT:
+    case AVN::Spectrometer::WB_SPECTROMETER_LRPP:
     {
-        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - L and R Circular Polarisation"));
+        m_pUI->groupBox_stokesPhase->setTitle(QString("Relative Phase"));
+
+        m_pPowerPlotWidget->setTitle(QString("WB Spectrometer - Relative Power - LCP / RCP"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
@@ -306,16 +379,16 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("RCP"));
         m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setTitle(QString("WB Spectrometer - Relative Phase"));
-        m_pStokesPlotWidget->setYLabel(QString("Relative Phase"));
-        m_pStokesPlotWidget->setYUnit(QString("rad"));
-        m_pStokesPlotWidget->setXLabel(QString("Frequency"));
-        m_pStokesPlotWidget->setXUnit(QString("MHz"));
+        m_pStokesPhasePlotWidget->setTitle(QString("WB Spectrometer - Relative Phase - LCP / RCP"));
+        m_pStokesPhasePlotWidget->setYLabel(QString("Relative Phase"));
+        m_pStokesPhasePlotWidget->setYUnit(QString("rad"));
+        m_pStokesPhasePlotWidget->setXLabel(QString("Frequency"));
+        m_pStokesPhasePlotWidget->setXUnit(QString("MHz"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("Relative Phase"));
-        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pStokesPhasePlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - LCP, RCP"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
         m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
@@ -324,11 +397,9 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
-        qvqstrCurveNames.push_back(QString("Stokes Q"));
-        qvqstrCurveNames.push_back(QString("Stokes U"));
         m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setXSpan(0.0, 400.0);
+        m_pStokesPhasePlotWidget->setXSpan(0.0, 400.0);
         m_pPowerPlotWidget->setXSpan(0.0, 400.0);
         m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, QString("MHz"));
 
@@ -336,15 +407,19 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
-        m_pStokesPlotWidget->enableRejectData(false);
+        m_pStokesPhasePlotWidget->enableRejectData(false);
         m_pBandPowerPlotWidget->enableRejectData(false);
+
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Wideband Spectrometer complex FFT data" << endl;
+
         break;
     }
 
     case AVN::Spectrometer::NB_SPECTROMETER_LRQU:
     {
-        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - L and R Circular Polarisation"));
+        m_pUI->groupBox_stokesPhase->setTitle(QString("Stokes Q / U"));
+
+        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - Relative Power - LCP / RCP"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
@@ -354,17 +429,17 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("RCP"));
         m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setTitle(QString("NB Spectrometer - Stokes Q and U"));
-        m_pStokesPlotWidget->setYLabel(QString("Relative Power"));
-        m_pStokesPlotWidget->setYUnit(QString(""));
-        m_pStokesPlotWidget->setXLabel(QString("Frequency"));
-        m_pStokesPlotWidget->setXUnit(QString("kHz"));
+        m_pStokesPhasePlotWidget->setTitle(QString("NB Spectrometer - Stokes Q / U"));
+        m_pStokesPhasePlotWidget->setYLabel(QString("Relative Power"));
+        m_pStokesPhasePlotWidget->setYUnit(QString(""));
+        m_pStokesPhasePlotWidget->setXLabel(QString("Frequency"));
+        m_pStokesPhasePlotWidget->setXUnit(QString("kHz"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("Stokes Q"));
         qvqstrCurveNames.push_back(QString("Stokes U"));
-        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pStokesPhasePlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - LCP, RCP, Q, U"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
         m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
@@ -377,7 +452,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("Stokes U"));
         m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
+        m_pStokesPhasePlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
         m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, QString("kHz"));
 
@@ -385,16 +460,18 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
-        m_pStokesPlotWidget->enableRejectData(false);
+        m_pStokesPhasePlotWidget->enableRejectData(false);
         m_pBandPowerPlotWidget->enableRejectData(false);
 
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Narrowband Spectrometer LRQU" << endl;
         break;
     }
 
-    case AVN::Spectrometer::NB_SPECTROMETER_CFFT:
+    case AVN::Spectrometer::NB_SPECTROMETER_LRPP:
     {
-        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - L and R Circular Polarisation"));
+        m_pUI->groupBox_stokesPhase->setTitle(QString("Relative Phase"));
+
+        m_pPowerPlotWidget->setTitle(QString("NB Spectrometer - Relative Power - LCP / RCP"));
         m_pPowerPlotWidget->setYLabel(QString("Relative Power"));
         m_pPowerPlotWidget->setYUnit(QString("dB"));
         m_pPowerPlotWidget->setXLabel(QString("Frequency"));
@@ -404,16 +481,16 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.push_back(QString("RCP"));
         m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setTitle(QString("NB Spectrometer - Relative Phase"));
-        m_pStokesPlotWidget->setYLabel(QString("Relative Phase"));
-        m_pStokesPlotWidget->setYUnit(QString("rad"));
-        m_pStokesPlotWidget->setXLabel(QString("Frequency"));
-        m_pStokesPlotWidget->setXUnit(QString("kHz"));
+        m_pStokesPhasePlotWidget->setTitle(QString("NB Spectrometer - Relative Phase"));
+        m_pStokesPhasePlotWidget->setYLabel(QString("Relative Phase"));
+        m_pStokesPhasePlotWidget->setYUnit(QString("rad"));
+        m_pStokesPhasePlotWidget->setXLabel(QString("Frequency"));
+        m_pStokesPhasePlotWidget->setXUnit(QString("kHz"));
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("Relative Phase"));
-        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pStokesPhasePlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
+        m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - LCP, RCP"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
         m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
@@ -422,11 +499,9 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         qvqstrCurveNames.clear();
         qvqstrCurveNames.push_back(QString("LCP"));
         qvqstrCurveNames.push_back(QString("RCP"));
-        qvqstrCurveNames.push_back(QString("Stokes Q"));
-        qvqstrCurveNames.push_back(QString("Stokes U"));
         m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
-        m_pStokesPlotWidget->setXSpan(-781.25, 781.25);
+        m_pStokesPhasePlotWidget->setXSpan(-781.25, 781.25);
         m_pPowerPlotWidget->setXSpan(-781.25, 781.25);
         m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, QString("kHz"));
 
@@ -434,7 +509,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->enableLogConversion(true);
 
         m_pPowerPlotWidget->enableRejectData(false);
-        m_pStokesPlotWidget->enableRejectData(false);
+        m_pStokesPhasePlotWidget->enableRejectData(false);
         m_pBandPowerPlotWidget->enableRejectData(false);
         cout << "cPlotsWidget::updatePlotType(): Setup plotting for Narrowband Spectrometer complex FFT data" << endl;
         break;
@@ -444,16 +519,16 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     default:
     {
         m_pPowerPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
-        m_pStokesPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
+        m_pStokesPhasePlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
         m_pBandPowerPlotWidget->setTitle(QString("Received unknown plot type: %1").arg(u16PlotType));
 
         QVector<QString> qvqstrCurveNames;
         m_pPowerPlotWidget->setCurveNames(qvqstrCurveNames);
-        m_pStokesPlotWidget->setCurveNames(qvqstrCurveNames);
+        m_pStokesPhasePlotWidget->setCurveNames(qvqstrCurveNames);
         m_pBandPowerPlotWidget->setCurveNames(qvqstrCurveNames);
 
         m_pPowerPlotWidget->enableRejectData(true);
-        m_pStokesPlotWidget->enableRejectData(true);
+        m_pStokesPhasePlotWidget->enableRejectData(true);
         m_pBandPowerPlotWidget->enableRejectData(true);
 
         cout << "cPlotsWidget::updatePlotType(): Warning got unknown plot type " << u16PlotType << ". Will not plot data" << endl;
@@ -467,7 +542,10 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
     //Strobe auto scale:
     m_pPowerPlotWidget->strobeAutoscale();
-    m_pStokesPlotWidget->strobeAutoscale();
+    m_pStokesPhasePlotWidget->strobeAutoscale();
+
+    m_pBandPowerPlotWidget->resetHistory();
+    m_pBandPowerPlotWidget->strobeAutoscale(5000);
 }
 
 void cPlotsWidget::slotPowerWidgetEnabled(bool bEnabled)
@@ -478,12 +556,12 @@ void cPlotsWidget::slotPowerWidgetEnabled(bool bEnabled)
     m_bPowerEnabled = bEnabled;
 }
 
-void cPlotsWidget::slotStokesWidgetEnabled(bool bEnabled)
+void cPlotsWidget::slotStokesPhaseWidgetEnabled(bool bEnabled)
 {
-    m_pStokesPlotWidget->setVisible(bEnabled);
+    m_pStokesPhasePlotWidget->setVisible(bEnabled);
 
     QWriteLocker oLock(&m_oMutex);
-    m_bStokesEnabled = bEnabled;
+    m_bStokesPhaseEnabled = bEnabled;
 }
 
 void cPlotsWidget::slotBandPowerWidgetEnabled(bool bEnabled)

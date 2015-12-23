@@ -40,7 +40,7 @@ private:
     Ui::cPlotsWidget                                        *m_pUI;
 
     cFramedQwtLinePlotWidget                                *m_pPowerPlotWidget;
-    cFramedQwtLinePlotWidget                                *m_pStokesPlotWidget;
+    cFramedQwtLinePlotWidget                                *m_pStokesPhasePlotWidget;
     cBandPowerQwtLinePlot                                   *m_pBandPowerPlotWidget;
 
     boost::shared_ptr<cSocketReceiverBase>                  m_pSocketReceiver;
@@ -49,7 +49,7 @@ private:
     bool                                                    m_bIsRunning;
 
     bool                                                    m_bPowerEnabled;
-    bool                                                    m_bStokesEnabled;
+    bool                                                    m_bStokesPhaseEnabled;
     bool                                                    m_bBandPowerEnabled;
 
     QReadWriteLock                                          m_oMutex;
@@ -71,7 +71,7 @@ public slots:
     void                                                    slotPausePlots(bool bPause);
     void                                                    slotResumePlots();
     void                                                    slotPowerWidgetEnabled(bool bEnabled);
-    void                                                    slotStokesWidgetEnabled(bool bEnabled);
+    void                                                    slotStokesPhaseWidgetEnabled(bool bEnabled);
     void                                                    slotBandPowerWidgetEnabled(bool bEnabled);
 
 signals:

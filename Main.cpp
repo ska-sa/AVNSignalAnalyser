@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     a.setApplicationName("AVNSignalAnalyser");
-    a.setApplicationVersion("0.0.1b");
+    a.setApplicationVersion("0.0.2");
     a.setOrganizationName("SKA SA");
     a.setOrganizationDomain("ska.ac.za");
 

@@ -71,7 +71,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_stokes">
+    <widget class="QGroupBox" name="groupBox_stokesPhase">
      <property name="font">
       <font>
        <pointsize>8</pointsize>
@@ -86,7 +86,7 @@
      <property name="checkable">
       <bool>true</bool>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_stokes">
+     <layout class="QHBoxLayout" name="horizontalLayout_stokesPhase">
       <property name="spacing">
        <number>0</number>
       </property>

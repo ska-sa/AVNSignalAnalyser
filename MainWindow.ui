@@ -149,7 +149,7 @@
      <x>0</x>
      <y>0</y>
      <width>606</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -168,9 +168,9 @@
     <property name="title">
      <string>Plots</string>
     </property>
-    <addaction name="actionShow_FFT"/>
-    <addaction name="actionShow_Stokes"/>
-    <addaction name="actionShow_Averages"/>
+    <addaction name="actionShowChannelPowers"/>
+    <addaction name="actionShowStokesPhase"/>
+    <addaction name="actionShowBandPowers"/>
    </widget>
    <widget class="QMenu" name="menuServer">
     <property name="title">
@@ -222,7 +222,7 @@
     <string>About</string>
    </property>
   </action>
-  <action name="actionShow_FFT">
+  <action name="actionShowChannelPowers">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -230,10 +230,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show FFT</string>
+    <string>Show channel powers</string>
    </property>
   </action>
-  <action name="actionShow_Stokes">
+  <action name="actionShowStokesPhase">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -241,10 +241,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Stokes</string>
+    <string>Show Stokes or relative phase</string>
    </property>
   </action>
-  <action name="actionShow_Averages">
+  <action name="actionShowBandPowers">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -252,7 +252,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Averages</string>
+    <string>Show band power history</string>
    </property>
   </action>
   <action name="actionConnect_Bind">

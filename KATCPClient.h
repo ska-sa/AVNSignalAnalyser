@@ -44,6 +44,12 @@ public:
     void                                                requestStopRecording();
     void                                                requestRecordingStatus();
     void                                                requestRecordingInfoUpdate();
+    //Async client requests
+    void                                                asyncRequestStartRecording(const std::string &strFilenamePrefix = std::string(""),
+                                                                              int64_t i64StartTime_us = 0, int64_t i64Duration_us = 0);
+    void                                                asyncRequestStopRecording();
+    void                                                asyncRequestRecordingStatus();
+    void                                                asyncRequestRecordingInfoUpdate();
 
 
     //Callback handler registration

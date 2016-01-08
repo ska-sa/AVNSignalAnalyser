@@ -70,15 +70,28 @@ public slots:
     void                                                    slotPausePlots();
     void                                                    slotPausePlots(bool bPause);
     void                                                    slotResumePlots();
-    void                                                    slotPowerWidgetEnabled(bool bEnabled);
-    void                                                    slotStokesPhaseWidgetEnabled(bool bEnabled);
-    void                                                    slotBandPowerWidgetEnabled(bool bEnabled);
+
+    //Slots for enabling / disabling plots from outside of this widget
+    void                                                    slotEnablePowerPlot(bool bEnable);
+    void                                                    slotEnableStokesPhasePlot(bool bEnable);
+    void                                                    slotEnableBandPowerPlot(bool bEnable);
+
+private slots:
+    //Slots to catch enabling / disabling of groupboxes and in turn fire signals to be emitted to other classes
+    void                                                    slotPowerPlotEnabled(bool bEnabled);
+    void                                                    slotStokesPhasePlotEnabled(bool bEnabled);
+    void                                                    slotBandPowerPlotEnabled(bool bEnabled);
 
 signals:
     void                                                    sigConnected();
     void                                                    sigDisconnected();
     void                                                    sigConnected(bool bIsConnected);
     void                                                    sigDisconnect();
+
+    //Signals emitted when plots are enabled on the actual plot widget
+    void                                                    sigPowerPlotEnabled(bool bEnabled);
+    void                                                    sigStokesPhasePlotEnabled(bool bEnabled);
+    void                                                    sigBandPowerPlotEnabled(bool bEnabled);
 
 };
 

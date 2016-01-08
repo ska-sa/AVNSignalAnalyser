@@ -42,7 +42,6 @@ SOURCES +=\
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp
 
-
 HEADERS  += MainWindow.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
     AVNUtilLibs/Sockets/InterruptibleBlockingSockets/InterruptibleBlockingTCPSocket.h \
@@ -96,21 +95,21 @@ unix{
 
     SYSTEM_GENTOO = $$system( cat /proc/version | grep -o Gentoo )
     contains( SYSTEM_GENTOO, Gentoo ) {
-        message( "Detected Gentoo Distrution." )
+        message( "Detected Gentoo Distribution." )
         LIBS += -lqwt6
         INCLUDEPATH += /usr/include/qwt6
     }
 
     SYSTEM_UBUNTU = $$system( cat /proc/version | grep -o Ubuntu )
     contains( SYSTEM_UBUNTU, Ubuntu ) {
-        message( "Detected Ubuntu Distrution." )
+        message( "Detected Ubuntu Distribution." )
         LIBS += -lqwt
         INCLUDEPATH += /usr/include/qwt
     }
 
     SYSTEM_DEBIAN = $$system( cat /proc/version | grep -o Debian )
     contains( SYSTEM_DEBIAN, Debian ) {
-        message( "Detected Debian Distrution." )
+        message( "Detected Debian Distribution." )
         LIBS += -lqwt
         INCLUDEPATH += /usr/include/qwt
     }

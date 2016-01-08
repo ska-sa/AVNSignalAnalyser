@@ -9,6 +9,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/foreach.hpp>
+#include <boost/thread/thread.hpp>
 #endif
 
 //Local includes
@@ -106,7 +107,7 @@ void cKATCPClient::threadFunction()
 
         do
         {
-            bFullMessage = m_pSocket->readUntil( strKATCPMessage, string("\n"), 500 );
+            bFullMessage = m_pSocket->readUntil( strKATCPMessage, string("\n"), 1500);
 
             if(disconnectRequested())
                 return;
@@ -177,7 +178,7 @@ void cKATCPClient::requestStartRecording(const string &strFilenamePrefix, int64_
 
     boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
 
-    m_pSocket->send(oSS.str().c_str(), oSS.str().length(), 100);
+    m_pSocket->send(oSS.str().c_str(), oSS.str().length(), 1000);
 
     cout << "cKATCPClient::requestStartRecording() Send start recording request : " << oSS.str().c_str() << endl;
 }
@@ -186,21 +187,41 @@ void cKATCPClient::requestStopRecording()
 {
     boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
 
-    m_pSocket->send("?stopRecording\n", 15, 100);
+    m_pSocket->send("?stopRecording\n", 15, 1000);
 }
 
 void cKATCPClient::requestRecordingStatus()
 {
     boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
 
-    m_pSocket->send("?getRecordingStatus\n", 20, 100);
+    m_pSocket->send("?getRecordingStatus\n", 20, 1000);
 }
 
 void cKATCPClient::requestRecordingInfoUpdate()
 {
     boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
 
-    m_pSocket->send("?getRecordingInfo\n", 18, 100);
+    m_pSocket->send("?getRecordingInfo\n", 18, 1000);
+}
+
+void cKATCPClient::asyncRequestStartRecording(const std::string &strFilenamePrefix, int64_t i64StartTime_us, int64_t i64Duration_us)
+{
+   boost::thread(boost::bind(&cKATCPClient::requestStartRecording, this, strFilenamePrefix, i64StartTime_us, i64Duration_us)).detach();
+}
+
+void cKATCPClient::asyncRequestStopRecording()
+{
+    boost::thread(&cKATCPClient::requestStopRecording, this).detach();
+}
+
+void cKATCPClient::asyncRequestRecordingStatus()
+{
+    boost::thread(&cKATCPClient::requestRecordingStatus, this).detach();
+}
+
+void cKATCPClient::asyncRequestRecordingInfoUpdate()
+{
+    boost::thread(&cKATCPClient::requestRecordingInfoUpdate, this).detach();
 }
 
 bool cKATCPClient::disconnectRequested()

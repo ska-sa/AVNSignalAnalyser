@@ -36,16 +36,33 @@ cMainWindow::~cMainWindow()
 
 void cMainWindow::connectSignalsToSlots()
 {
+    //NetworkGroupBox controls
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectClicked(int, const QString&, unsigned short, const QString&, unsigned short)),
                       m_pPlotsWidget, SLOT(slotConnect(int, const QString&, unsigned short, const QString&, unsigned short)) );
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigDisconnectClicked()), m_pPlotsWidget, SLOT(slotDisconnect()) );
     QObject::connect( m_pPlotsWidget, SIGNAL(sigConnected(bool)), m_pNetworkGroupBox, SLOT(slotSetConnectedOrBound(bool)) );
-    QObject::connect( m_pUI->actionExit, SIGNAL(triggered()), this, SLOT(close()));
-    QObject::connect( m_pUI->actionConnect_Bind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
-    QObject::connect( m_pUI->actionDisconnect_Unbind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectedOrBound(bool)), this, SLOT(slotSetConnectedOrBound(bool)) );
     QObject::connect( m_pNetworkGroupBox, SIGNAL(sigConnectKATCP(bool)), this, SLOT(slotKATCPEnabled(bool)) );
-    QObject::connect ( m_pUI->actionAbout, SIGNAL ( triggered()), this, SLOT ( slotOpenAboutDialog() ) );
+
+    //File menu actions
+    QObject::connect( m_pUI->actionExit, SIGNAL(triggered()), this, SLOT(close()));
+
+    //Server menu actions
+    QObject::connect( m_pUI->actionConnect_Bind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
+    QObject::connect( m_pUI->actionDisconnect_Unbind, SIGNAL(triggered()), m_pNetworkGroupBox, SLOT(slotConnectDisconnect()));
+
+    //Help menu actions
+    QObject::connect( m_pUI->actionAbout, SIGNAL ( triggered()), this, SLOT ( slotOpenAboutDialog() ) );
+
+    //Plots menu actions
+    //Menu notifying PlotsWidget
+    QObject::connect( m_pUI->actionShowChannelPowers, SIGNAL ( triggered(bool) ), m_pPlotsWidget, SLOT ( slotEnablePowerPlot(bool) ) );
+    QObject::connect( m_pUI->actionShowStokesPhase, SIGNAL ( triggered(bool) ), m_pPlotsWidget, SLOT ( slotEnableStokesPhasePlot(bool) ) );
+    QObject::connect( m_pUI->actionShowBandPowers, SIGNAL ( triggered(bool) ), m_pPlotsWidget, SLOT ( slotEnableBandPowerPlot(bool) ) );
+    //PlotsWidget notifying menu
+    QObject::connect( m_pPlotsWidget, SIGNAL ( sigPowerPlotEnabled(bool) ), m_pUI->actionShowChannelPowers, SLOT ( setChecked(bool) ) );
+    QObject::connect( m_pPlotsWidget, SIGNAL ( sigStokesPhasePlotEnabled(bool) ), m_pUI->actionShowStokesPhase, SLOT ( setChecked(bool) ) );
+    QObject::connect( m_pPlotsWidget, SIGNAL ( sigBandPowerPlotEnabled(bool) ), m_pUI->actionShowBandPowers, SLOT ( setChecked(bool) ) );
 }
 
 void cMainWindow::slotSetConnectedOrBound(bool bIsConnectedOrBound)

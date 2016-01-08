@@ -41,6 +41,7 @@ void cRoachAcquistionControlWidget::connectSignalToSlots()
     QObject::connect( m_pUI->comboBox_timeZone, SIGNAL(currentIndexChanged(QString)), this, SLOT(slotTimeZoneChanged(QString)) );
 
     //Call backs that alter the GUI decoupled by Queued connections to be executed by the GUI thread
+    qRegisterMetaType<int64_t>("int64_t");
     QObject::connect( this, SIGNAL(sigRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t)),
                       this, SLOT(slotRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t)), Qt::QueuedConnection);
     QObject::connect( this, SIGNAL(sigRecordingStarted()), this, SLOT(slotRecordingStarted()), Qt::QueuedConnection);
@@ -64,7 +65,7 @@ void cRoachAcquistionControlWidget::slotSecondTimerTrigger()
     QReadLocker oLock(&m_oMutex);
     if(m_bIsRecording)
     {
-        m_pKATCPClient->requestRecordingInfoUpdate();
+        m_pKATCPClient->asyncRequestRecordingInfoUpdate();
     }
 
 }
@@ -73,7 +74,7 @@ void cRoachAcquistionControlWidget::slotStartStopRecordingClicked()
 {
     if(m_bIsRecording)
     {
-        m_pKATCPClient->requestStopRecording();
+        m_pKATCPClient->asyncRequestStopRecording();
     }
     else
     {
@@ -119,7 +120,7 @@ void cRoachAcquistionControlWidget::slotStartStopRecordingClicked()
             }
         }
 
-        m_pKATCPClient->requestStartRecording(m_pUI->lineEdit_filenamePrefix->text().toStdString(), i64StartTime_us, i64Duration_us);
+        m_pKATCPClient->asyncRequestStartRecording(m_pUI->lineEdit_filenamePrefix->text().toStdString(), i64StartTime_us, i64Duration_us);
 
         cout << "cRoachAcquistionControlWidget::slotStartStopRecordingClicked(): Requesting recording start time of " << AVN::stringFromTimestamp_full(i64StartTime_us) << endl;
     }

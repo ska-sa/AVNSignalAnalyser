@@ -39,9 +39,10 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
     m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1, QString("s")); //Band power span is in seconds:
 
     //Plot enabling/disabling
-    QObject::connect(m_pUI->groupBox_powers, SIGNAL(clicked(bool)), this, SLOT(slotPowerWidgetEnabled(bool)));
-    QObject::connect(m_pUI->groupBox_stokesPhase, SIGNAL(clicked(bool)), this, SLOT(slotStokesPhaseWidgetEnabled(bool)));
-    QObject::connect(m_pUI->groupBox_bandPower, SIGNAL(clicked(bool)), this, SLOT(slotBandPowerWidgetEnabled(bool)));
+    //When the groupboxes for any of the 3 plots types are enabled or disabled catch and fire a signal off from this class
+    QObject::connect(m_pUI->groupBox_powers, SIGNAL(clicked(bool)), this, SLOT(slotPowerPlotEnabled(bool)));
+    QObject::connect(m_pUI->groupBox_stokesPhase, SIGNAL(clicked(bool)), this, SLOT(slotStokesPhasePlotEnabled(bool)));
+    QObject::connect(m_pUI->groupBox_bandPower, SIGNAL(clicked(bool)), this, SLOT(slotBandPowerPlotEnabled(bool)));
 
     //Vertical lines for intergrated bandwidth
     QObject::connect(m_pBandPowerPlotWidget, SIGNAL(sigSelectedBandChanged(QVector<double>)), m_pPowerPlotWidget, SLOT(slotDrawVerticalLines(QVector<double>)));
@@ -53,6 +54,10 @@ cPlotsWidget::cPlotsWidget(QWidget *parent) :
     //Connect Zoom of X axis together
     QObject::connect(m_pPowerPlotWidget, SIGNAL(sigXScaleDivChanged(double,double)), m_pStokesPhasePlotWidget, SLOT(slotUpdateXScaleDiv(double,double)) );
     QObject::connect(m_pStokesPhasePlotWidget, SIGNAL(sigXScaleDivChanged(double,double)), m_pPowerPlotWidget, SLOT(slotUpdateXScaleDiv(double,double)) );
+
+    //Connect mouse position indicator of power and stoke/phase plots together.
+    QObject::connect(m_pPowerPlotWidget, SIGNAL(sigSharedMousePositionChanged(QPointF,bool)), m_pStokesPhasePlotWidget, SLOT(slotUpdateSharedMouseHPosition(QPointF,bool)) );
+    QObject::connect(m_pStokesPhasePlotWidget, SIGNAL(sigSharedMousePositionChanged(QPointF,bool)), m_pPowerPlotWidget, SLOT(slotUpdateSharedMouseHPosition(QPointF,bool)) );
 }
 
 cPlotsWidget::~cPlotsWidget()
@@ -548,23 +553,27 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     m_pBandPowerPlotWidget->strobeAutoscale(5000);
 }
 
-void cPlotsWidget::slotPowerWidgetEnabled(bool bEnabled)
+void cPlotsWidget::slotPowerPlotEnabled(bool bEnabled)
 {
     m_pPowerPlotWidget->setVisible(bEnabled);
 
     QWriteLocker oLock(&m_oMutex);
     m_bPowerEnabled = bEnabled;
+
+    sigPowerPlotEnabled(bEnabled);
 }
 
-void cPlotsWidget::slotStokesPhaseWidgetEnabled(bool bEnabled)
+void cPlotsWidget::slotStokesPhasePlotEnabled(bool bEnabled)
 {
     m_pStokesPhasePlotWidget->setVisible(bEnabled);
 
     QWriteLocker oLock(&m_oMutex);
     m_bStokesPhaseEnabled = bEnabled;
+
+    sigStokesPhasePlotEnabled(bEnabled);
 }
 
-void cPlotsWidget::slotBandPowerWidgetEnabled(bool bEnabled)
+void cPlotsWidget::slotBandPowerPlotEnabled(bool bEnabled)
 {
     m_pBandPowerPlotWidget->setVisible(bEnabled);
 
@@ -573,6 +582,8 @@ void cPlotsWidget::slotBandPowerWidgetEnabled(bool bEnabled)
 
     //Remove band lines from the power plot while the band power power is hidden
     m_pPowerPlotWidget->slotShowVerticalLines(bEnabled);
+
+    sigBandPowerPlotEnabled(bEnabled);
 }
 
 void cPlotsWidget::socketConnected_callback()
@@ -589,4 +600,34 @@ void cPlotsWidget::socketDisconnected_callback()
     //This will be called by the socket reading thread. so it needs to be decoupled with a queued connection
     //The slotDisconnect asked the socket reading thread to join so this queued connection prevents the socket
     //reading thread from joining itself.
+}
+
+void cPlotsWidget::slotEnablePowerPlot(bool bEnable)
+{
+    blockSignals(true); //Don't notify change to other classes and the request came from outside this class
+
+    m_pUI->groupBox_powers->setChecked(bEnable);
+    slotPowerPlotEnabled(bEnable);
+
+    blockSignals(false);
+}
+
+void cPlotsWidget::slotEnableStokesPhasePlot(bool bEnable)
+{
+   blockSignals(true);
+
+    m_pUI->groupBox_stokesPhase->setChecked(bEnable);
+    slotStokesPhasePlotEnabled(bEnable);
+
+    blockSignals(false);
+}
+
+void cPlotsWidget::slotEnableBandPowerPlot(bool bEnable)
+{
+    blockSignals(true);
+
+    m_pUI->groupBox_bandPower->setChecked(bEnable);
+    slotBandPowerPlotEnabled(bEnable);
+
+    blockSignals(false);
 }

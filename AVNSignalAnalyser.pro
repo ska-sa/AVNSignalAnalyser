@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = AVNSignalAnalyser
 TEMPLATE = app
 
+DEFINES += USE_BOOST_TIME=1 #Use boost libs for timestamp derivation
 
 SOURCES +=\
         MainWindow.cpp \

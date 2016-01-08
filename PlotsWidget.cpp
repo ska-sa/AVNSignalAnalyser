@@ -64,6 +64,9 @@ cPlotsWidget::~cPlotsWidget()
 {
     setIsRunning(false);
 
+    //Wait for data fetching thread to exit
+    m_oGetDataFuture.waitForFinished();
+
     delete m_pUI;
 }
 

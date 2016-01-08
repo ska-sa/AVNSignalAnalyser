@@ -116,7 +116,7 @@ unix{
     }
 
     #Boost seems to be ubiquitous across distros
-    LIBS += -lboost_system -lboost_thread -lboost_chrono
+    LIBS += -lboost_system -lboost_thread -lboost_chrono -lboost_date_time
 }
 
 win32{
@@ -136,9 +136,9 @@ win32{
 
     #Boost
     CONFIG(debug, debug|release) {
-        LIBS += -LC:\\DevLibs\\boost_1_59_0\\stage\\lib libboost_system-vc120-mt-gd-1_59.lib libboost_thread-vc120-mt-gd-1_59.lib libboost_chrono-vc120-mt-gd-1_59.lib
+        LIBS += -LC:\\DevLibs\\boost_1_59_0\\stage\\lib libboost_system-vc120-mt-gd-1_59.lib libboost_thread-vc120-mt-gd-1_59.lib libboost_chrono-vc120-mt-gd-1_59.lib libboost_date_time-vc120-mt-gd-1_59.lib
     } else {
-        LIBS += -LC:\\DevLibs\\boost_1_59_0\\stage\\lib libboost_system-vc120-mt-1_59.lib libboost_thread-vc120-mt-1_59.lib libboost_chrono-vc120-mt-1_59.lib
+        LIBS += -LC:\\DevLibs\\boost_1_59_0\\stage\\lib libboost_system-vc120-mt-1_59.lib libboost_thread-vc120-mt-1_59.lib libboost_chrono-vc120-mt-1_59.lib libboost_date_time-vc120-mt-1_59.lib
     }
     INCLUDEPATH += C:\\DevLibs\\boost_1_59_0
 

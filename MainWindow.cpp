@@ -11,8 +11,8 @@
 
 using namespace std;
 
-cMainWindow::cMainWindow(QWidget *parent) :
-    QMainWindow(parent),
+cMainWindow::cMainWindow(QWidget *pParent) :
+    QMainWindow(pParent),
     m_pUI(new Ui::cMainWindow),
     m_pNetworkGroupBox(new cNetworkConnectionWidget(true, true, this)), //No UDP currently
     m_pPlotsWidget(new cPlotsWidget(this))
@@ -21,8 +21,6 @@ cMainWindow::cMainWindow(QWidget *parent) :
     m_pUI->horizontalLayout_MainWindowTop->insertSpacerItem(1, new QSpacerItem(20, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed));
     m_pUI->horizontalLayout_MainWindowTop->insertWidget(2, m_pNetworkGroupBox);
     m_pUI->verticalLayout_mainWindow->insertWidget(1, m_pPlotsWidget);
-
-    statusBar()->hide(); //Status bar not used at present ...screen real estate
 
     connectSignalsToSlots();
 

@@ -147,5 +147,4 @@ win32{
 
     #Set application executable icon with this file:
     RC_FILE = AVNSignalAnalyser_win32.rc
-
 }

@@ -30,7 +30,7 @@ class cPlotsWidget : public QWidget, public cTCPReceiver::cNotificationCallbackI
     Q_OBJECT
 
 public:
-    explicit cPlotsWidget(QWidget *parent = 0);
+    explicit cPlotsWidget(QWidget *pParent = 0);
     ~cPlotsWidget();
 
     bool                                                    isRunning();

@@ -17,8 +17,8 @@
 
 using namespace std;
 
-cPlotsWidget::cPlotsWidget(QWidget *parent) :
-    QWidget(parent),
+cPlotsWidget::cPlotsWidget(QWidget *pParent) :
+    QWidget(pParent),
     m_pUI(new Ui::cPlotsWidget),
     m_pPowerPlotWidget(new cFramedQwtLinePlotWidget(this)),
     m_pStokesPhasePlotWidget(new cFramedQwtLinePlotWidget(this)),

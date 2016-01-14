@@ -11,7 +11,7 @@
 //Local includes
 #include "NetworkConnectionWidget.h"
 #include "PlotsWidget.h"
-#include "RoachAcquistionControlWidget.h"
+#include "RoachAcquistionControlDialog.h"
 
 namespace Ui {
 class cMainWindow;
@@ -29,7 +29,7 @@ private:
     Ui::cMainWindow                                 *m_pUI;
     cNetworkConnectionWidget                        *m_pNetworkGroupBox;
     cPlotsWidget                                    *m_pPlotsWidget;
-    QScopedPointer<cRoachAcquistionControlWidget>   m_pAquisitionWidget;
+    QScopedPointer<cRoachAcquistionControlDialog>   m_pAquisitionDialog;
 
     void                                            connectSignalsToSlots();
 

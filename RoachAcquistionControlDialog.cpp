@@ -7,15 +7,15 @@
 #endif
 
 //Local includes
-#include "RoachAcquistionControlWidget.h"
-#include "ui_RoachAcquistionControlWidget.h"
+#include "RoachAcquistionControlDialog.h"
+#include "ui_RoachAcquistionControlDialog.h"
 #include "AVNUtilLibs/Timestamp/Timestamp.h"
 
 using namespace std;
 
-cRoachAcquistionControlWidget::cRoachAcquistionControlWidget(const QString &qstrHostname, uint16_t u16Port, QWidget *pParent) :
-    QGroupBox(pParent),
-    m_pUI(new Ui::cRoachAcquistionControlWidget),
+cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, QWidget *pParent) :
+    QDialog(pParent),
+    m_pUI(new Ui::cRoachAcquistionControlDialog),
     m_eTimeSpec(Qt::LocalTime),
     m_bIsRecording(false)
 {
@@ -23,18 +23,34 @@ cRoachAcquistionControlWidget::cRoachAcquistionControlWidget(const QString &qstr
 
     connectSignalToSlots();
 
-    m_oSecondTimer.start(1000);
-
-    m_pKATCPClient = boost::make_shared<cKATCPClient>(qstrHostname.toStdString(), u16Port);
-    m_pKATCPClient->registerCallbackHandler(this);
+    connect(qstrHostname, u16Port);
 }
 
-cRoachAcquistionControlWidget::~cRoachAcquistionControlWidget()
+cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(QWidget *pParent) :
+    QDialog(pParent),
+    m_pUI(new Ui::cRoachAcquistionControlDialog),
+    m_eTimeSpec(Qt::LocalTime),
+    m_bIsRecording(false)
+{
+    m_pUI->setupUi(this);
+
+    connectSignalToSlots();
+}
+
+cRoachAcquistionControlDialog::~cRoachAcquistionControlDialog()
 {
     delete m_pUI;
 }
 
-void cRoachAcquistionControlWidget::connectSignalToSlots()
+void cRoachAcquistionControlDialog::connect(const QString &qstrHostname, uint16_t u16Port)
+{
+    m_pKATCPClient = boost::make_shared<cKATCPClient>(qstrHostname.toStdString(), u16Port);
+    m_pKATCPClient->registerCallbackHandler(this);
+
+    m_oSecondTimer.start(1000);
+}
+
+void cRoachAcquistionControlDialog::connectSignalToSlots()
 {
     QObject::connect( &m_oSecondTimer, SIGNAL(timeout()), this, SLOT(slotSecondTimerTrigger()) );
     QObject::connect( m_pUI->pushButton_startStopRecording, SIGNAL(pressed()), this, SLOT(slotStartStopRecordingClicked()) );
@@ -49,7 +65,7 @@ void cRoachAcquistionControlWidget::connectSignalToSlots()
 
 }
 
-void cRoachAcquistionControlWidget::slotSecondTimerTrigger()
+void cRoachAcquistionControlDialog::slotSecondTimerTrigger()
 {
     //Update the start time in the GUI every second to the current time.
     QDateTime oTimeNow = QDateTime::currentDateTime().addSecs(2); //Now plus 2 seconds
@@ -65,16 +81,16 @@ void cRoachAcquistionControlWidget::slotSecondTimerTrigger()
     QReadLocker oLock(&m_oMutex);
     if(m_bIsRecording)
     {
-        m_pKATCPClient->asyncRequestRecordingInfoUpdate();
+        m_pKATCPClient->requestRecordingInfoUpdate();
     }
 
 }
 
-void cRoachAcquistionControlWidget::slotStartStopRecordingClicked()
+void cRoachAcquistionControlDialog::slotStartStopRecordingClicked()
 {
     if(m_bIsRecording)
     {
-        m_pKATCPClient->asyncRequestStopRecording();
+        m_pKATCPClient->requestStopRecording();
     }
     else
     {
@@ -120,31 +136,31 @@ void cRoachAcquistionControlWidget::slotStartStopRecordingClicked()
             }
         }
 
-        m_pKATCPClient->asyncRequestStartRecording(m_pUI->lineEdit_filenamePrefix->text().toStdString(), i64StartTime_us, i64Duration_us);
+        m_pKATCPClient->requestStartRecording(m_pUI->lineEdit_filenamePrefix->text().toStdString(), i64StartTime_us, i64Duration_us);
 
-        cout << "cRoachAcquistionControlWidget::slotStartStopRecordingClicked(): Requesting recording start time of " << AVN::stringFromTimestamp_full(i64StartTime_us) << endl;
+        cout << "cRoachAcquistionControlDialog::slotStartStopRecordingClicked(): Requesting recording start time of " << AVN::stringFromTimestamp_full(i64StartTime_us) << endl;
     }
 }
 
-void cRoachAcquistionControlWidget::connected_callback(bool bConnected)
+void cRoachAcquistionControlDialog::connected_callback(bool bConnected)
 {
     sigKATCPSocketConnected(bConnected);
-    cout << "cRoachAcquistionControlWidget::connected_callback() Got connected = " << bConnected << " callback" << endl;
+    cout << "cRoachAcquistionControlDialog::connected_callback() Got connected = " << bConnected << " callback" << endl;
 }
 
-void cRoachAcquistionControlWidget::recordingStarted_callback()
+void cRoachAcquistionControlDialog::recordingStarted_callback()
 {
     sigRecordingStarted();
-    cout << "cRoachAcquistionControlWidget::recordingStarted_callback() Got recording started callback" << endl;
+    cout << "cRoachAcquistionControlDialog::recordingStarted_callback() Got recording started callback" << endl;
 }
 
-void cRoachAcquistionControlWidget::recordingStopped_callback()
+void cRoachAcquistionControlDialog::recordingStopped_callback()
 {
     sigRecordingStoppped();
-    cout << "cRoachAcquistionControlWidget::recordingStopped_callback() Got recording stopped callback" << endl;
+    cout << "cRoachAcquistionControlDialog::recordingStopped_callback() Got recording stopped callback" << endl;
 }
 
-void cRoachAcquistionControlWidget::recordingInfoUpdate_callback(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
+void cRoachAcquistionControlDialog::recordingInfoUpdate_callback(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
 {
     //Send this info to private slot via queued connection to change GUI. Needs to be a queued connection for execution from the
     //main (GUI) thread. You can't alter the GUI from arbitary threads.
@@ -152,7 +168,7 @@ void cRoachAcquistionControlWidget::recordingInfoUpdate_callback(const string &s
     sigRecordingInfoUpdate(QString(strFilename.c_str()), i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us);
 }
 
-void cRoachAcquistionControlWidget::slotRecordingInfoUpdate(const QString &qstrFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
+void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
 {
     //Update info about the recording progress in the GUI
 
@@ -186,7 +202,7 @@ void cRoachAcquistionControlWidget::slotRecordingInfoUpdate(const QString &qstrF
     }
 }
 
-void cRoachAcquistionControlWidget::slotRecordingStarted()
+void cRoachAcquistionControlDialog::slotRecordingStarted()
 {
     {
         QWriteLocker oLock(&m_oMutex);
@@ -196,7 +212,7 @@ void cRoachAcquistionControlWidget::slotRecordingStarted()
     m_pUI->pushButton_startStopRecording->setText(QString("Stop recording"));
 }
 
-void cRoachAcquistionControlWidget::slotRecordingStoppped()
+void cRoachAcquistionControlDialog::slotRecordingStoppped()
 {
     {
         QWriteLocker oLock(&m_oMutex);
@@ -214,7 +230,7 @@ void cRoachAcquistionControlWidget::slotRecordingStoppped()
     m_pUI->label_recordingTimeLeft->setText(QString(""));
 }
 
-void cRoachAcquistionControlWidget::slotTimeZoneChanged(QString qstrTimeZone)
+void cRoachAcquistionControlDialog::slotTimeZoneChanged(QString qstrTimeZone)
 {
     if(qstrTimeZone == QString("UTC"))
     {
@@ -231,7 +247,7 @@ void cRoachAcquistionControlWidget::slotTimeZoneChanged(QString qstrTimeZone)
     m_pUI->timeEdit_recordAt->setTimeSpec(m_eTimeSpec);
 }
 
-bool cRoachAcquistionControlWidget::eventFilter(QObject *pObj, QEvent *pEvent)
+bool cRoachAcquistionControlDialog::eventFilter(QObject *pObj, QEvent *pEvent)
 {
     //Intercept close events and hide instead
     if(pEvent->type() == QEvent::Close)
@@ -242,5 +258,5 @@ bool cRoachAcquistionControlWidget::eventFilter(QObject *pObj, QEvent *pEvent)
     }
 
     //Otherwise process the event as normal
-    return cRoachAcquistionControlWidget::eventFilter(pObj, pEvent);
+    return cRoachAcquistionControlDialog::eventFilter(pObj, pEvent);
 }

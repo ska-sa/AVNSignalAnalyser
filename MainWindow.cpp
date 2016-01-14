@@ -18,6 +18,7 @@ cMainWindow::cMainWindow(QWidget *pParent) :
     m_pPlotsWidget(new cPlotsWidget(this))
 {
     m_pUI->setupUi(this);
+
     m_pUI->horizontalLayout_MainWindowTop->insertSpacerItem(1, new QSpacerItem(20, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed));
     m_pUI->horizontalLayout_MainWindowTop->insertWidget(2, m_pNetworkGroupBox);
     m_pUI->verticalLayout_mainWindow->insertWidget(1, m_pPlotsWidget);
@@ -76,9 +77,13 @@ void cMainWindow::slotKATCPEnabled(bool bEnabled)
     {
         cout << "cMainWindow::slotKATCPEnabled() Starting KATCP client" << endl;
 
-        m_pAquisitionWidget.reset( new cRoachAcquistionControlWidget(m_pNetworkGroupBox->getPeerAddress(), m_pNetworkGroupBox->getKATCPPort()) );
-        QObject::connect(m_pAquisitionWidget.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)), Qt::QueuedConnection);
-        QObject::connect( m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue, SIGNAL(triggered()), m_pAquisitionWidget.data(), SLOT(show()) );
+        m_pAquisitionDialog.reset( new cRoachAcquistionControlDialog(this) );
+        m_pAquisitionDialog->show();
+
+        QObject::connect(m_pAquisitionDialog.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)), Qt::QueuedConnection);
+        QObject::connect( m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue, SIGNAL(triggered()), m_pAquisitionDialog.data(), SLOT(show()) );
+
+        m_pAquisitionDialog->connect(m_pNetworkGroupBox->getPeerAddress(), m_pNetworkGroupBox->getKATCPPort());
 
         cout << "cMainWindow::slotKATCPEnabled() KATCP client started..." << endl;
     }
@@ -86,9 +91,9 @@ void cMainWindow::slotKATCPEnabled(bool bEnabled)
     {
         cout << "cMainWindow::slotKATCPEnabled() Stopping KATCP client" << endl;
 
-        QObject::disconnect(m_pAquisitionWidget.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)));
-        QObject::disconnect( m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue, SIGNAL(triggered()), m_pAquisitionWidget.data(), SLOT(show()) );
-        m_pAquisitionWidget.reset();
+        QObject::disconnect(m_pAquisitionDialog.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)));
+        QObject::disconnect( m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue, SIGNAL(triggered()), m_pAquisitionDialog.data(), SLOT(show()) );
+        m_pAquisitionDialog.reset();
 
         cout << "cMainWindow::slotKATCPEnabled() KATCP client terminated..." << endl;
     }
@@ -98,7 +103,7 @@ void cMainWindow::slotSetKATCPConnected(bool bIsKATCPConnected)
 {
     //Update menu entry
     m_pUI->actionOpen_Roach_Aquisition_Control_Dialogue->setEnabled(bIsKATCPConnected);
-    m_pAquisitionWidget->show();
+    m_pAquisitionDialog->show();
 }
 
 void cMainWindow::slotOpenAboutDialog()

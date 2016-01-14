@@ -31,7 +31,6 @@ SOURCES +=\
     AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.cpp \
     NetworkConnectionWidget.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.cpp \
-    RoachAcquistionControlWidget.cpp \
     AVNUtilLibs/Timestamp/Timestamp.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp \
     KATCPClient.cpp \
@@ -41,7 +40,8 @@ SOURCES +=\
     AVNGUILibs/QwtPlotting/WallTimeQwtScaleDraw.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.cpp \
-    AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp
+    AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp \
+    RoachAcquistionControlDialog.cpp
 
 HEADERS  += MainWindow.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
@@ -62,7 +62,6 @@ HEADERS  += MainWindow.h \
     AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.h \
     NetworkConnectionWidget.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h \
-    RoachAcquistionControlWidget.h \
     KATCPClient.h \
     AboutDialog.h \
     AVNGUILibs/QwtPlotting/WaterfallQwtPlotWidget.h \
@@ -70,15 +69,16 @@ HEADERS  += MainWindow.h \
     AVNGUILibs/QwtPlotting/WallTimeQwtScaleDraw.h \
     AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.h \
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.h \
-    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.h
+    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.h \
+    RoachAcquistionControlDialog.h
 
 
 FORMS    += MainWindow.ui \
     PlotsWidget.ui \
     NetworkConnectionWidget.ui \
-    RoachAcquistionControlWidget.ui \
     AboutDialog.ui \
-    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.ui
+    AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.ui \
+    RoachAcquistionControlDialog.ui
 
 RESOURCES += \
     Images.qrc

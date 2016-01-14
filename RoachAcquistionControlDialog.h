@@ -1,10 +1,10 @@
-#ifndef ROACH_ACQUISITION_CONTROL_WIDGET_H
-#define ROACH_ACQUISITION_CONTROL_WIDGET_H
+#ifndef ROACH_ACQUISITION_CONTROL_DIALOG_H
+#define ROACH_ACQUISITION_CONTROL_DIALOG_H
 
 //System includes
 
 //Libary includes
-#include <QGroupBox>
+#include <QDialog>
 #include <QTimer>
 #include <QReadWriteLock>
 
@@ -16,19 +16,22 @@
 #include "KATCPClient.h"
 
 namespace Ui {
-class cRoachAcquistionControlWidget;
+class cRoachAcquistionControlDialog;
 }
 
-class cRoachAcquistionControlWidget : public QGroupBox, public cKATCPClient::cCallbackInterface
+class cRoachAcquistionControlDialog : public QDialog, public cKATCPClient::cCallbackInterface
 {
     Q_OBJECT
 
 public:
-    explicit cRoachAcquistionControlWidget(const QString &qstrHostname, uint16_t u16Port, QWidget *pParent = 0);
-    ~cRoachAcquistionControlWidget();
+    explicit cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, QWidget *pParent = 0);
+    explicit cRoachAcquistionControlDialog(QWidget *pParent = 0);
+    ~cRoachAcquistionControlDialog();
+
+    void connect(const QString &qstrHostname, uint16_t u16Port);
 
 private:
-    Ui::cRoachAcquistionControlWidget   *m_pUI;
+    Ui::cRoachAcquistionControlDialog   *m_pUI;
 
     QTimer                              m_oSecondTimer;
 
@@ -69,4 +72,4 @@ signals:
 
 };
 
-#endif // ROACH_ACQUISITION_CONTROL_WIDGET_H
+#endif // ROACH_ACQUISITION_CONTROL_DIALOG_H

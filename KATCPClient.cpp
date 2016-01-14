@@ -42,7 +42,8 @@ void cKATCPClient::connect(const string &strServerAddress, uint16_t u16Port)
     m_u16Port               = u16Port;
 
     //Launch KATCP client in a new thread
-    m_pSocketThread.reset(new boost::thread(&cKATCPClient::threadFunction, this));
+    m_pSocketReadThread.reset(new boost::thread(&cKATCPClient::threadReadFunction, this));
+    m_pSocketWriteThread.reset(new boost::thread(&cKATCPClient::threadWriteFunction, this));
 }
 
 void cKATCPClient::disconnect()
@@ -53,10 +54,16 @@ void cKATCPClient::disconnect()
         boost::unique_lock<boost::shared_mutex> oLock(m_oFlagMutex);
 
         m_bDisconnectFlag = true;
+        m_pSocket->cancelCurrrentOperations();
+
+        m_oConditionWriteQueueNoLongerEmpty.notify_all();
     }
 
-    m_pSocketThread->join();
-    m_pSocketThread.reset();
+    m_pSocketReadThread->join();
+    m_pSocketReadThread.reset();
+
+    m_pSocketWriteThread->join();
+    m_pSocketWriteThread.reset();
 
     for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
     {
@@ -71,7 +78,15 @@ void cKATCPClient::disconnect()
     cout << "cKATCPClient::disconnect() KATCP disconnected." << endl;
 }
 
-void cKATCPClient::threadFunction()
+bool cKATCPClient::disconnectRequested()
+{
+    //Thread safe function to check the disconnect flag
+    boost::shared_lock<boost::shared_mutex> oLock(m_oFlagMutex);
+
+    return m_bDisconnectFlag;
+}
+
+void cKATCPClient::threadReadFunction()
 {
     //Connect the socket
     m_pSocket.reset(new cInterruptibleBlockingTCPSocket());
@@ -107,14 +122,55 @@ void cKATCPClient::threadFunction()
 
         do
         {
-            bFullMessage = m_pSocket->readUntil( strKATCPMessage, string("\n"), 1500);
+            bFullMessage = m_pSocket->readUntil( strKATCPMessage, string("\n"), 500);
 
             if(disconnectRequested())
                 return;
+
+            //readUntil function will append to the message string if each iteration if the stop character is not reached.
         }
         while(!bFullMessage);
 
         processKATCPMessage(strKATCPMessage);
+    }
+}
+
+void cKATCPClient::threadWriteFunction()
+{
+    string strMessageToSend;
+
+    while(!disconnectRequested())
+    {
+        {
+            boost::unique_lock<boost::mutex> oLock(m_oWriteQueueMutex);
+
+            //If the queue is empty wait for data
+            if(!m_qstrWriteQueue.size())
+            {
+                if(!m_oConditionWriteQueueNoLongerEmpty.timed_wait(oLock, boost::posix_time::milliseconds(500)) )
+                {
+                    //Timeout after 500 ms then check again (Loop restarts)
+                    continue;
+                }
+            }
+
+            //Check size again
+            if(!m_qstrWriteQueue.size())
+                continue;
+
+            //Make a of copy of the string and pop it from the queue
+            strMessageToSend = m_qstrWriteQueue.back();
+            m_qstrWriteQueue.pop();
+        }
+
+        //Write the data to the socket
+        //reattempt to send on timeout or failure
+        while(!m_pSocket->write(strMessageToSend, 500));
+        {
+            //Check for shutdown in between attempts
+            if(disconnectRequested())
+                return;
+        }
     }
 }
 
@@ -176,64 +232,42 @@ void cKATCPClient::requestStartRecording(const string &strFilenamePrefix, int64_
 
     oSS << string("\n");
 
-    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
-
-    m_pSocket->send(oSS.str().c_str(), oSS.str().length(), 1000);
+    sendKATCPMessage(oSS.str());
 
     cout << "cKATCPClient::requestStartRecording() Send start recording request : " << oSS.str().c_str() << endl;
 }
 
 void cKATCPClient::requestStopRecording()
 {
-    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
-
-    m_pSocket->send("?stopRecording\n", 15, 1000);
+    sendKATCPMessage(string("?stopRecording\n"));
 }
 
 void cKATCPClient::requestRecordingStatus()
 {
-    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
-
-    m_pSocket->send("?getRecordingStatus\n", 20, 1000);
+    sendKATCPMessage(string("?getRecordingStatus\n"));
 }
 
 void cKATCPClient::requestRecordingInfoUpdate()
 {
-    boost::unique_lock<boost::shared_mutex> oLock(m_oSocketWriteMutex);
-
-    m_pSocket->send("?getRecordingInfo\n", 18, 1000);
+    sendKATCPMessage(string("?getRecordingInfo\n"));
 }
 
-void cKATCPClient::asyncRequestStartRecording(const std::string &strFilenamePrefix, int64_t i64StartTime_us, int64_t i64Duration_us)
+void cKATCPClient::sendKATCPMessage(const std::string &strMessage)
 {
-   boost::thread(boost::bind(&cKATCPClient::requestStartRecording, this, strFilenamePrefix, i64StartTime_us, i64Duration_us)).detach();
-}
+    boost::unique_lock<boost::mutex> oLock(m_oWriteQueueMutex);
 
-void cKATCPClient::asyncRequestStopRecording()
-{
-    boost::thread(&cKATCPClient::requestStopRecording, this).detach();
-}
+    m_qstrWriteQueue.push(strMessage);
 
-void cKATCPClient::asyncRequestRecordingStatus()
-{
-    boost::thread(&cKATCPClient::requestRecordingStatus, this).detach();
-}
-
-void cKATCPClient::asyncRequestRecordingInfoUpdate()
-{
-    boost::thread(&cKATCPClient::requestRecordingInfoUpdate, this).detach();
-}
-
-bool cKATCPClient::disconnectRequested()
-{
-    boost::shared_lock<boost::shared_mutex> oLock(m_oFlagMutex);
-
-    return m_bDisconnectFlag;
+    //If the queue has gone from being empty to not-empty notify the writing thread.
+    if(m_qstrWriteQueue.size() == 1)
+    {
+        m_oConditionWriteQueueNoLongerEmpty.notify_one();
+    }
 }
 
 void cKATCPClient::processKATCPMessage(const string &strMessage)
 {
-    cout << "Got KATCP message: " << strMessage << endl;
+    //cout << "Got KATCP message: " << strMessage << endl;
 
     //Tokenise string and store tokens in a vector
     vector<string> vstrTokens = tokeniseString(strMessage, string(" "));

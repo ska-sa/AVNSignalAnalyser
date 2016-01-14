@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>cRoachAcquistionControlWidget</class>
- <widget class="QGroupBox" name="cRoachAcquistionControlWidget">
+ <class>cRoachAcquistionControlDialog</class>
+ <widget class="QDialog" name="cRoachAcquistionControlDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>827</width>
-    <height>251</height>
+    <width>957</width>
+    <height>177</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Roach Aquisition Control</string>
+   <string>Roach Aquisition KATCP Control</string>
   </property>
   <property name="windowIcon">
    <iconset resource="Images.qrc">
-    <normaloff>:/Images/Images/AVNLogo.png</normaloff>:/Images/Images/AVNLogo.png</iconset>
-  </property>
-  <property name="title">
-   <string>Roach Aquisition KATCP Control</string>
+    <normaloff>:/Images/Images/AVNLogo.ico</normaloff>:/Images/Images/AVNLogo.ico</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -64,11 +61,8 @@
           <string>record at</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroup</string>
-         </attribute>
         </widget>
        </item>
        <item>
@@ -122,9 +116,6 @@
          <property name="text">
           <string>record for</string>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroup_2</string>
-         </attribute>
         </widget>
        </item>
        <item>
@@ -174,9 +165,6 @@
          <property name="text">
           <string>record in</string>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroup</string>
-         </attribute>
         </widget>
        </item>
        <item>
@@ -227,9 +215,6 @@
        <property name="checked">
         <bool>true</bool>
        </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_2</string>
-       </attribute>
       </widget>
      </item>
     </layout>
@@ -403,8 +388,4 @@
   <include location="Images.qrc"/>
  </resources>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
-  <buttongroup name="buttonGroup"/>
- </buttongroups>
 </ui>

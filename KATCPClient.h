@@ -3,6 +3,7 @@
 
 //System includes
 #include <vector>
+#include <queue>
 
 //Library includes
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
@@ -44,12 +45,8 @@ public:
     void                                                requestStopRecording();
     void                                                requestRecordingStatus();
     void                                                requestRecordingInfoUpdate();
-    //Async client requests
-    void                                                asyncRequestStartRecording(const std::string &strFilenamePrefix = std::string(""),
-                                                                              int64_t i64StartTime_us = 0, int64_t i64Duration_us = 0);
-    void                                                asyncRequestStopRecording();
-    void                                                asyncRequestRecordingStatus();
-    void                                                asyncRequestRecordingInfoUpdate();
+
+    void                                                sendKATCPMessage(const std::string &strMessage); //Send a custom KATCP message to the connected peer
 
 
     //Callback handler registration
@@ -61,7 +58,8 @@ public:
     std::vector<std::string>                            tokeniseString(const std::string &strInputString, const std::string &strSeperators);
 
 protected:
-    void                                                threadFunction();
+    void                                                threadReadFunction();
+    void                                                threadWriteFunction();
     void                                                processKATCPMessage(const std::string &strMessage);
 
     //Server informs
@@ -71,7 +69,8 @@ protected:
                                                                             int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us);
 
     //Threads
-    boost::scoped_ptr<boost::thread>                    m_pSocketThread;
+    boost::scoped_ptr<boost::thread>                    m_pSocketReadThread;
+    boost::scoped_ptr<boost::thread>                    m_pSocketWriteThread;
 
     //Sockets
     boost::scoped_ptr<cInterruptibleBlockingTCPSocket>  m_pSocket;
@@ -83,13 +82,14 @@ protected:
     //Other variables
     bool                                                m_bDisconnectFlag;
     boost::shared_mutex                                 m_oFlagMutex;
-
-    boost::shared_mutex                                 m_oSocketWriteMutex; //Prevent multiple writes happening concurrently
-
     bool                                                disconnectRequested();
 
+    std::queue<std::string>                             m_qstrWriteQueue;
+    boost::condition_variable                           m_oConditionWriteQueueNoLongerEmpty;
+    boost::mutex                                        m_oWriteQueueMutex;
+
     //Callback handlers
-    std::vector<cCallbackInterface*>                     m_vpCallbackHandlers;
+    std::vector<cCallbackInterface*>                    m_vpCallbackHandlers;
     std::vector<boost::shared_ptr<cCallbackInterface> > m_vpCallbackHandlers_shared;
     boost::shared_mutex                                 m_oCallbackHandlersMutex;
 };

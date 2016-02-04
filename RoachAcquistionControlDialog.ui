@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>957</width>
-    <height>177</height>
+    <height>221</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -61,7 +61,7 @@
           <string>record at</string>
          </property>
          <property name="checked">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -71,6 +71,9 @@
           <font>
            <pointsize>8</pointsize>
           </font>
+         </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
          </property>
          <property name="displayFormat">
           <string>HH:mm:ss </string>
@@ -125,6 +128,9 @@
            <pointsize>8</pointsize>
           </font>
          </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
         </widget>
        </item>
        <item>
@@ -173,6 +179,9 @@
           <font>
            <pointsize>8</pointsize>
           </font>
+         </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -346,6 +355,30 @@
        </property>
       </widget>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Disk space remaining:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLabel" name="label_diskSpaceRemaining">
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -375,8 +408,14 @@
          <pointsize>8</pointsize>
         </font>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::StrongFocus</enum>
+       </property>
        <property name="text">
         <string>Start Recording</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

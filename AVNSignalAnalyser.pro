@@ -33,7 +33,6 @@ SOURCES +=\
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.cpp \
     AVNUtilLibs/Timestamp/Timestamp.cpp \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDefinitions.cpp \
-    KATCPClient.cpp \
     AboutDialog.cpp \
     AVNGUILibs/QwtPlotting/WaterfallQwtPlotWidget.cpp \
     AVNGUILibs/QwtPlotting/WaterfallPlotSpectromgramData.cpp \
@@ -41,7 +40,9 @@ SOURCES +=\
     AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp \
-    RoachAcquistionControlDialog.cpp
+    RoachAcquistionControlDialog.cpp \
+    AVNAppLibs/KATCP/KATCPClientBase.cpp \
+    RoachAcquisitionServerKATCPClient.cpp
 
 HEADERS  += MainWindow.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
@@ -62,7 +63,6 @@ HEADERS  += MainWindow.h \
     AVNAppLibs/SocketStreamers/UDPReceiver/UDPReceiver.h \
     NetworkConnectionWidget.h \
     AVNDataTypes/SpectrometerDataStream/SpectrometerDataStreamInterpreter.h \
-    KATCPClient.h \
     AboutDialog.h \
     AVNGUILibs/QwtPlotting/WaterfallQwtPlotWidget.h \
     AVNGUILibs/QwtPlotting/WaterfallPlotSpectromgramData.h \
@@ -70,7 +70,9 @@ HEADERS  += MainWindow.h \
     AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.h \
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.h \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.h \
-    RoachAcquistionControlDialog.h
+    RoachAcquistionControlDialog.h \
+    AVNAppLibs/KATCP/KATCPClientBase.h \
+    RoachAcquisitionServerKATCPClient.h
 
 
 FORMS    += MainWindow.ui \

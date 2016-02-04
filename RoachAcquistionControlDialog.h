@@ -13,13 +13,13 @@
 #endif
 
 //Local includes
-#include "KATCPClient.h"
+#include "RoachAcquisitionServerKATCPClient.h"
 
 namespace Ui {
 class cRoachAcquistionControlDialog;
 }
 
-class cRoachAcquistionControlDialog : public QDialog, public cKATCPClient::cCallbackInterface
+class cRoachAcquistionControlDialog : public QDialog, public cRoachAcquisitionServerKATCPClient::cCallbackInterface
 {
     Q_OBJECT
 
@@ -28,47 +28,53 @@ public:
     explicit cRoachAcquistionControlDialog(QWidget *pParent = 0);
     ~cRoachAcquistionControlDialog();
 
-    void connect(const QString &qstrHostname, uint16_t u16Port);
+    void                                                    connect(const QString &qstrHostname, uint16_t u16Port);
 
 private:
-    Ui::cRoachAcquistionControlDialog   *m_pUI;
+    Ui::cRoachAcquistionControlDialog                       *m_pUI;
 
-    QTimer                              m_oSecondTimer;
+    QTimer                                                  m_oSecondTimer;
 
-    Qt::TimeSpec                        m_eTimeSpec;
+    Qt::TimeSpec                                            m_eTimeSpec;
 
-    bool                                m_bIsRecording;
+    bool                                                    m_bIsRecording;
 
-    boost::shared_ptr<cKATCPClient>     m_pKATCPClient;
+    boost::shared_ptr<cRoachAcquisitionServerKATCPClient>   m_pKATCPClient;
 
-    QReadWriteLock                      m_oMutex;
+    QReadWriteLock                                          m_oMutex;
 
-    void                                connectSignalToSlots();
+    void                                                    connectSignalToSlots();
 
-    //Implemented callbacks from cKATCPClient::cCallbackInterface
-    void                                connected_callback(bool bConnected);
-    void                                recordingStarted_callback();
-    void                                recordingStopped_callback();
-    void                                recordingInfoUpdate_callback(const std::string &strFilename,
-                                                                     int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us);
+    //Implemented callbacks from cRoachAcquisitionServerKATCPClient::cCallbackInterface
+    void                                                    connected_callback(bool bConnected);
+    void                                                    recordingStarted_callback();
+    void                                                    recordingStopped_callback();
+    void                                                    recordingInfoUpdate_callback(const std::string &strFilename,
+                                                                                         int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                                                         int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                                                         uint64_t u64DiskSpaceRemaining_B);
 
-    bool                                eventFilter(QObject *pObj, QEvent *pEvent); //Overload to hide instead of close
+    bool                                                    eventFilter(QObject *pObj, QEvent *pEvent); //Overload to hide instead of close on clicking close
 
 private slots:
-    void                                slotSecondTimerTrigger();
-    void                                slotStartStopRecordingClicked();
-    void                                slotRecordingInfoUpdate(const QString &qstrFilename,
-                                                                int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us);
-    void                                slotRecordingStarted();
-    void                                slotRecordingStoppped();
-    void                                slotTimeZoneChanged(QString qstrTimeZone);
+    void                                                    slotSecondTimerTrigger();
+    void                                                    slotStartStopRecordingClicked();
+    void                                                    slotRecordingInfoUpdate(const QString &qstrFilename,
+                                                                                    int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                                                    int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                                                    uint64_t u64DiskSpaceRemaining_B);
+    void                                                    slotRecordingStarted();
+    void                                                    slotRecordingStoppped();
+    void                                                    slotTimeZoneChanged(QString qstrTimeZone);
 
 signals:
-    void                                sigKATCPSocketConnected(bool bConnected);
-    void                                sigRecordingInfoUpdate(const QString &qstrFilename,
-                                                                int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us);
-    void                                sigRecordingStarted();
-    void                                sigRecordingStoppped();
+    void                                                    sigKATCPSocketConnected(bool bConnected);
+    void                                                    sigRecordingInfoUpdate(const QString &qstrFilename,
+                                                                                   int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                                                   int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                                                   uint64_t u64DiskSpaceRemaining_B);
+    void                                                    sigRecordingStarted();
+    void                                                    sigRecordingStoppped();
 
 };
 

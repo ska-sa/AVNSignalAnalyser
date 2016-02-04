@@ -16,3 +16,6 @@
 [submodule "AVNGUILibs/QwtPlotting"]
 	path = AVNGUILibs/QwtPlotting
 	url = ssh://git@brains/gitRepos/CPP/AVNGUILibs/QwtPlotting.git
+[submodule "AVNAppLibs/KATCP"]
+	path = AVNAppLibs/KATCP
+	url = ssh://git@brains/gitRepos/CPP/AVNAppLibs/KATCP.git

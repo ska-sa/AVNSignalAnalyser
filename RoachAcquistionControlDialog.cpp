@@ -44,7 +44,7 @@ cRoachAcquistionControlDialog::~cRoachAcquistionControlDialog()
 
 void cRoachAcquistionControlDialog::connect(const QString &qstrHostname, uint16_t u16Port)
 {
-    m_pKATCPClient = boost::make_shared<cKATCPClient>(qstrHostname.toStdString(), u16Port);
+    m_pKATCPClient = boost::make_shared<cRoachAcquisitionServerKATCPClient>(qstrHostname.toStdString(), u16Port);
     m_pKATCPClient->registerCallbackHandler(this);
 
     m_oSecondTimer.start(1000);
@@ -56,10 +56,17 @@ void cRoachAcquistionControlDialog::connectSignalToSlots()
     QObject::connect( m_pUI->pushButton_startStopRecording, SIGNAL(pressed()), this, SLOT(slotStartStopRecordingClicked()) );
     QObject::connect( m_pUI->comboBox_timeZone, SIGNAL(currentIndexChanged(QString)), this, SLOT(slotTimeZoneChanged(QString)) );
 
+    //Select last editted option
+    QObject::connect( m_pUI->timeEdit_recordAt, SIGNAL(editingFinished()), m_pUI->radioButton_recordAt, SLOT(click()) );
+    QObject::connect( m_pUI->doubleSpinBox_recordIn, SIGNAL(editingFinished()), m_pUI->radioButton_recordIn, SLOT(click()) );
+    QObject::connect( m_pUI->doubleSpinBox_recordFor, SIGNAL(editingFinished()), m_pUI->radioButton_recordFor, SLOT(click()) );
+
+
     //Call backs that alter the GUI decoupled by Queued connections to be executed by the GUI thread
     qRegisterMetaType<int64_t>("int64_t");
-    QObject::connect( this, SIGNAL(sigRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t)),
-                      this, SLOT(slotRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t)), Qt::QueuedConnection);
+    qRegisterMetaType<uint64_t>("uint64_t");
+    QObject::connect( this, SIGNAL(sigRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t,uint64_t)),
+                      this, SLOT(slotRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t,uint64_t)), Qt::QueuedConnection);
     QObject::connect( this, SIGNAL(sigRecordingStarted()), this, SLOT(slotRecordingStarted()), Qt::QueuedConnection);
     QObject::connect( this, SIGNAL(sigRecordingStoppped()), this, SLOT(slotRecordingStoppped()), Qt::QueuedConnection);
 
@@ -75,7 +82,12 @@ void cRoachAcquistionControlDialog::slotSecondTimerTrigger()
         oTimeNow = oTimeNow.toUTC();
     }
 
-    m_pUI->timeEdit_recordAt->setDateTime(oTimeNow);
+    //Update the start time to time now if it is older than time now
+    //Do change if the user is busy editing the box
+    if(!m_pUI->timeEdit_recordAt->hasFocus() && m_pUI->timeEdit_recordAt->dateTime() < oTimeNow)
+    {
+        m_pUI->timeEdit_recordAt->setDateTime(oTimeNow);
+    }
 
     //Update the recording info
     QReadLocker oLock(&m_oMutex);
@@ -160,15 +172,17 @@ void cRoachAcquistionControlDialog::recordingStopped_callback()
     cout << "cRoachAcquistionControlDialog::recordingStopped_callback() Got recording stopped callback" << endl;
 }
 
-void cRoachAcquistionControlDialog::recordingInfoUpdate_callback(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
+void cRoachAcquistionControlDialog::recordingInfoUpdate_callback(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                                 int64_t i64StopTime_us, int64_t i64TimeLeft_us, uint64_t u64DiskSpaceRemaining_B)
 {
     //Send this info to private slot via queued connection to change GUI. Needs to be a queued connection for execution from the
     //main (GUI) thread. You can't alter the GUI from arbitary threads.
 
-    sigRecordingInfoUpdate(QString(strFilename.c_str()), i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us);
+    sigRecordingInfoUpdate(QString(strFilename.c_str()), i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64DiskSpaceRemaining_B);
 }
 
-void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t i64StopTime_us, int64_t i64TimeLeft_us)
+void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                            int64_t i64StopTime_us, int64_t i64TimeLeft_us, uint64_t u64DiskSpaceRemaining_B)
 {
     //Update info about the recording progress in the GUI
 
@@ -200,6 +214,9 @@ void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrF
             m_pUI->label_recordingTimeLeft->setText(QString(AVN::stringFromTimeDuration(i64TimeLeft_us).c_str()));
         }
     }
+
+    //Always update disk space
+    m_pUI->label_diskSpaceRemaining->setText(QString("%1 GB").arg((double)u64DiskSpaceRemaining_B / 1e9, 0, 'f'));
 }
 
 void cRoachAcquistionControlDialog::slotRecordingStarted()
@@ -256,6 +273,14 @@ bool cRoachAcquistionControlDialog::eventFilter(QObject *pObj, QEvent *pEvent)
         this->hide();
         return true;
     }
+
+//    if(pEvent->type() == QEvent::KeyPress)
+//    {
+//        if(pEvent->KeyPress == QKeyEvent)
+//        pEvent->ignore();
+//        this->hide();
+//        return true;
+//    }
 
     //Otherwise process the event as normal
     return cRoachAcquistionControlDialog::eventFilter(pObj, pEvent);

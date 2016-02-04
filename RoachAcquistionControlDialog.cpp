@@ -65,8 +65,8 @@ void cRoachAcquistionControlDialog::connectSignalToSlots()
     //Call backs that alter the GUI decoupled by Queued connections to be executed by the GUI thread
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<uint64_t>("uint64_t");
-    QObject::connect( this, SIGNAL(sigRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t,uint64_t)),
-                      this, SLOT(slotRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t,uint64_t)), Qt::QueuedConnection);
+    QObject::connect( this, SIGNAL(sigRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t,uint64_t, uint64_t)),
+                      this, SLOT(slotRecordingInfoUpdate(QString,int64_t,int64_t,int64_t,int64_t,uint64_t, uint64_t)), Qt::QueuedConnection);
     QObject::connect( this, SIGNAL(sigRecordingStarted()), this, SLOT(slotRecordingStarted()), Qt::QueuedConnection);
     QObject::connect( this, SIGNAL(sigRecordingStoppped()), this, SLOT(slotRecordingStoppped()), Qt::QueuedConnection);
 
@@ -173,16 +173,18 @@ void cRoachAcquistionControlDialog::recordingStopped_callback()
 }
 
 void cRoachAcquistionControlDialog::recordingInfoUpdate_callback(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
-                                                                 int64_t i64StopTime_us, int64_t i64TimeLeft_us, uint64_t u64DiskSpaceRemaining_B)
+                                                                 int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                                 uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B)
 {
     //Send this info to private slot via queued connection to change GUI. Needs to be a queued connection for execution from the
     //main (GUI) thread. You can't alter the GUI from arbitary threads.
 
-    sigRecordingInfoUpdate(QString(strFilename.c_str()), i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64DiskSpaceRemaining_B);
+    sigRecordingInfoUpdate(QString(strFilename.c_str()), i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
 }
 
 void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
-                                                            int64_t i64StopTime_us, int64_t i64TimeLeft_us, uint64_t u64DiskSpaceRemaining_B)
+                                                            int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                            uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B)
 {
     //Update info about the recording progress in the GUI
 
@@ -195,6 +197,7 @@ void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrF
         m_pUI->label_recordingDuration->setText(QString(""));
         m_pUI->label_recordingStopTime->setText(QString(""));
         m_pUI->label_recordingTimeLeft->setText(QString(""));
+        m_pUI->label_currentFileSize->setText(QString(""));
     }
     else
     {
@@ -213,10 +216,12 @@ void cRoachAcquistionControlDialog::slotRecordingInfoUpdate(const QString &qstrF
             m_pUI->label_recordingStopTime->setText(QString(AVN::stringFromTimestamp_full(i64StopTime_us).c_str()));
             m_pUI->label_recordingTimeLeft->setText(QString(AVN::stringFromTimeDuration(i64TimeLeft_us).c_str()));
         }
+
+        m_pUI->label_currentFileSize->setText(QString("%1 MB").arg((double)u64CurrentFileSize_B / 1e6, 0, 'f', 3));
     }
 
     //Always update disk space
-    m_pUI->label_diskSpaceRemaining->setText(QString("%1 GB").arg((double)u64DiskSpaceRemaining_B / 1e9, 0, 'f'));
+    m_pUI->label_diskSpaceRemaining->setText(QString("%1 GB").arg((double)u64DiskSpaceRemaining_B / 1e9, 0, 'f', 3));
 }
 
 void cRoachAcquistionControlDialog::slotRecordingStarted()

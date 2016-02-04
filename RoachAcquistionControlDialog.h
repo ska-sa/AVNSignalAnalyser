@@ -52,7 +52,7 @@ private:
     void                                                    recordingInfoUpdate_callback(const std::string &strFilename,
                                                                                          int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
                                                                                          int64_t i64StopTime_us, int64_t i64TimeLeft_us,
-                                                                                         uint64_t u64DiskSpaceRemaining_B);
+                                                                                         uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B);
 
     bool                                                    eventFilter(QObject *pObj, QEvent *pEvent); //Overload to hide instead of close on clicking close
 
@@ -62,7 +62,7 @@ private slots:
     void                                                    slotRecordingInfoUpdate(const QString &qstrFilename,
                                                                                     int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
                                                                                     int64_t i64StopTime_us, int64_t i64TimeLeft_us,
-                                                                                    uint64_t u64DiskSpaceRemaining_B);
+                                                                                    uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B);
     void                                                    slotRecordingStarted();
     void                                                    slotRecordingStoppped();
     void                                                    slotTimeZoneChanged(QString qstrTimeZone);
@@ -72,7 +72,7 @@ signals:
     void                                                    sigRecordingInfoUpdate(const QString &qstrFilename,
                                                                                    int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
                                                                                    int64_t i64StopTime_us, int64_t i64TimeLeft_us,
-                                                                                   uint64_t u64DiskSpaceRemaining_B);
+                                                                                   uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B);
     void                                                    sigRecordingStarted();
     void                                                    sigRecordingStoppped();
 

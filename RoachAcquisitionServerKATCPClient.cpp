@@ -52,16 +52,17 @@ void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string
     {
         if(!vstrTokens[0].compare(0, 14, "#recordingInfo"))
         {
-            if(vstrTokens.size() < 7)
+            if(vstrTokens.size() < 8)
                 return;
 
             int64_t i64StartTime_us             = strtoll(vstrTokens[2].c_str(), NULL, 10);
             int64_t i64EllapsedTime_us          = strtoll(vstrTokens[3].c_str(), NULL, 10);
             int64_t i64StopTime_us              = strtoll(vstrTokens[4].c_str(), NULL, 10);
             int64_t i64TimeLeft_us              = strtoll(vstrTokens[5].c_str(), NULL, 10);
-            uint64_t u64DiskSpaceRemaining_B    = strtoull(vstrTokens[6].c_str(), NULL, 10);
+            uint64_t u64CurrentFileSize_B       = strtoull(vstrTokens[6].c_str(), NULL, 10);
+            uint64_t u64DiskSpaceRemaining_B    = strtoull(vstrTokens[7].c_str(), NULL, 10);
 
-            sendRecordingInfoUpdate(vstrTokens[1], i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64DiskSpaceRemaining_B);
+            sendRecordingInfoUpdate(vstrTokens[1], i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
 
             return;
         }
@@ -69,6 +70,15 @@ void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string
     catch(out_of_range &oError)
     {
     }
+}
+
+void cRoachAcquisitionServerKATCPClient::onConnected()
+{
+    //Allow some time for the read thread to initialised
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
+
+    //Request the current recording status.
+    requestRecordingStatus();
 }
 
 void cRoachAcquisitionServerKATCPClient::sendRecordingStarted()
@@ -111,8 +121,10 @@ void cRoachAcquisitionServerKATCPClient::sendRecordingStopped()
     }
 }
 
-void cRoachAcquisitionServerKATCPClient::sendRecordingInfoUpdate(const string &strFilename, int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
-                                       int64_t i64StopTime_us, int64_t i64TimeLeft_us, uint64_t u64DiskSpaceRemaining_B)
+void cRoachAcquisitionServerKATCPClient::sendRecordingInfoUpdate(const string &strFilename,
+                                                                 int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                                 int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                                 uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B)
 {
     boost::shared_lock<boost::shared_mutex> oLock;
 
@@ -122,13 +134,13 @@ void cRoachAcquisitionServerKATCPClient::sendRecordingInfoUpdate(const string &s
     for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
     {
         cCallbackInterface *pHandler = dynamic_cast<cCallbackInterface*>(m_vpCallbackHandlers[ui]);
-        pHandler->recordingInfoUpdate_callback(strFilename, i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64DiskSpaceRemaining_B);
+        pHandler->recordingInfoUpdate_callback(strFilename, i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
     }
 
     for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
     {
         boost::shared_ptr<cCallbackInterface> pHandler = boost::dynamic_pointer_cast<cCallbackInterface>(m_vpCallbackHandlers_shared[ui]);
-        pHandler->recordingInfoUpdate_callback(strFilename, i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64DiskSpaceRemaining_B);
+        pHandler->recordingInfoUpdate_callback(strFilename, i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
     }
 }
 

@@ -22,7 +22,7 @@ public:
         virtual void                                    recordingInfoUpdate_callback(const std::string &strFilename,
                                                                                      int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
                                                                                      int64_t i64StopTime_us, int64_t i64TimeLeft_us,
-                                                                                     uint64_t u64DiskSpaceRemaining_B) = 0;
+                                                                                     uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B) = 0;
     };
 
     cRoachAcquisitionServerKATCPClient(const std::string &strServerAddress, uint16_t u16Port = 7147);
@@ -39,14 +39,15 @@ public:
 private:
     //Implement from base class
     void                                                processKATCPMessage(const std::vector<std::string> &vstrMessageTokens);
+    void                                                onConnected();
 
     //Notifications sent to all callback handlers
     void                                                sendRecordingStarted();
     void                                                sendRecordingStopped();
     void                                                sendRecordingInfoUpdate(const std::string &strFilename,
-                                                                            int64_t i64StartTime_us, int64_t i64EllapsedTime_us, int64_t
-                                                                            i64StopTime_us, int64_t i64TimeLeft_us,
-                                                                            uint64_t u64DiskSpaceRemaining_B);
+                                                                                int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
+                                                                                int64_t i64StopTime_us, int64_t i64TimeLeft_us,
+                                                                                uint64_t u64CurrentFileSize_B, uint64_t u64DiskSpaceRemaining_B);
 
 };
 

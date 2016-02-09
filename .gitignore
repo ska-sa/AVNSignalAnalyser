@@ -3,3 +3,5 @@ AVNSignalAnalyser
 AVNSignalAnalyser.exe
 *.o
 *.moc
+Makefile
+ui_*

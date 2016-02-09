@@ -42,7 +42,8 @@ SOURCES +=\
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp \
     RoachAcquistionControlDialog.cpp \
     AVNAppLibs/KATCP/KATCPClientBase.cpp \
-    RoachAcquisitionServerKATCPClient.cpp
+    RoachAcquisitionServerKATCPClient.cpp \
+    AVNDataTypes/SpectrometerDataStream/cSpectrometerOverflowRegisters.cpp
 
 HEADERS  += MainWindow.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
@@ -72,7 +73,8 @@ HEADERS  += MainWindow.h \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.h \
     RoachAcquistionControlDialog.h \
     AVNAppLibs/KATCP/KATCPClientBase.h \
-    RoachAcquisitionServerKATCPClient.h
+    RoachAcquisitionServerKATCPClient.h \
+    AVNDataTypes/SpectrometerDataStream/cSpectrometerOverflowRegisters.h
 
 
 FORMS    += MainWindow.ui \

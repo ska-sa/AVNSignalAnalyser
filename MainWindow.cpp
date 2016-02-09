@@ -77,7 +77,8 @@ void cMainWindow::slotKATCPEnabled(bool bEnabled)
     {
         cout << "cMainWindow::slotKATCPEnabled() Starting KATCP client" << endl;
 
-        m_pAquisitionDialog.reset( new cRoachAcquistionControlDialog(this) );
+        m_pAquisitionDialog.reset( new cRoachAcquistionControlDialog() );
+        m_pAquisitionDialog->setModal(false); //Don't block the rest of the GUI and don't be always-on-top
         m_pAquisitionDialog->show();
 
         QObject::connect(m_pAquisitionDialog.data(), SIGNAL(sigKATCPSocketConnected(bool)), this, SLOT(slotSetKATCPConnected(bool)), Qt::QueuedConnection);

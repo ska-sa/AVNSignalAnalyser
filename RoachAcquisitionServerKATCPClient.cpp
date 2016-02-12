@@ -23,6 +23,9 @@ void cRoachAcquisitionServerKATCPClient::onConnected()
 
     //Subscribe to the necessary sensors
     subscribeToSensors();
+
+    //Ask for an updated list of Firmware launchers
+    requestRoachGatewareList();
 }
 
 void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string> &vstrTokens)
@@ -75,6 +78,22 @@ void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string
             uint64_t u64DiskSpaceRemaining_B    = strtoull(vstrTokens[7].c_str(), NULL, 10);
 
             sendRecordingInfoUpdate(vstrTokens[1], i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
+
+            return;
+        }
+    }
+    catch(out_of_range &oError)
+    {
+    }
+
+    try
+    {
+        if(!vstrTokens[0].compare("#roachGatewareList"))
+        {
+            vector<string> vstrGatewareList(vstrTokens);
+            vstrGatewareList.erase(vstrGatewareList.begin());
+
+            sendRoachGatewareList(vstrGatewareList);
 
             return;
         }
@@ -138,6 +157,12 @@ void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string
             if(!vstrTokens[3].compare("roachConnected"))
             {
                 sendRoachKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
+                return;
+            }
+
+            if(!vstrTokens[3].compare("roachStokesEnabled"))
+            {
+                sendStokesEnabled( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
                 return;
             }
 
@@ -453,6 +478,26 @@ void cRoachAcquisitionServerKATCPClient::sendFrequencyRFChan1(int64_t i64Timesta
     }
 }
 
+void cRoachAcquisitionServerKATCPClient::sendRoachGatewareList(const vector<string> &vstrGatewareList)
+{
+    boost::shared_lock<boost::shared_mutex> oLock;
+
+    //Note the vector contains the base type callback handler pointer so cast to the derived version is this class
+    //to call function added in the derived version of the callback handler interface class
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
+    {
+        cCallbackInterface *pHandler = dynamic_cast<cCallbackInterface*>(m_vpCallbackHandlers[ui]);
+        pHandler->roachGatewareList_callback(vstrGatewareList);
+    }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        boost::shared_ptr<cCallbackInterface> pHandler = boost::dynamic_pointer_cast<cCallbackInterface>(m_vpCallbackHandlers_shared[ui]);
+        pHandler->roachGatewareList_callback(vstrGatewareList);
+    }
+}
+
 void cRoachAcquisitionServerKATCPClient::sendRoachKATCPConnected(bool bConnected)
 {
     boost::shared_lock<boost::shared_mutex> oLock;
@@ -470,6 +515,26 @@ void cRoachAcquisitionServerKATCPClient::sendRoachKATCPConnected(bool bConnected
     {
         boost::shared_ptr<cCallbackInterface> pHandler = boost::dynamic_pointer_cast<cCallbackInterface>(m_vpCallbackHandlers_shared[ui]);
         pHandler->roachKATCPConnected_callback(bConnected);
+    }
+}
+
+void cRoachAcquisitionServerKATCPClient::sendStokesEnabled(bool bConnected)
+{
+    boost::shared_lock<boost::shared_mutex> oLock;
+
+    //Note the vector contains the base type callback handler pointer so cast to the derived version is this class
+    //to call function added in the derived version of the callback handler interface class
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
+    {
+        cCallbackInterface *pHandler = dynamic_cast<cCallbackInterface*>(m_vpCallbackHandlers[ui]);
+        pHandler->stokesEnabled_callback(bConnected);
+    }
+
+    for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
+    {
+        boost::shared_ptr<cCallbackInterface> pHandler = boost::dynamic_pointer_cast<cCallbackInterface>(m_vpCallbackHandlers_shared[ui]);
+        pHandler->stokesEnabled_callback(bConnected);
     }
 }
 
@@ -832,6 +897,142 @@ void cRoachAcquisitionServerKATCPClient::requestRecordingInfoUpdate()
     sendKATCPMessage(string("?getRecordingInfo\n"));
 }
 
+void cRoachAcquisitionServerKATCPClient::requestRoachGatewareList()
+{
+    sendKATCPMessage("?getRoachGatewareList\n");
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachProgram(const std::string strScriptPath)
+{
+    stringstream oSS;
+    oSS << "?programRoach ";
+    oSS << strScriptPath;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetStokesEnabled(bool bEnabled)
+{
+    stringstream oSS;
+    oSS << "?setRoachStokesEnabled ";
+    if(bEnabled)
+    {
+        oSS << "1";
+    }
+    else
+    {
+        oSS << "0";
+    }
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetAccumulationLength(uint32_t u32Length_nFrames)
+{
+    stringstream oSS;
+    oSS << "?setRoachAccumulationLength ";
+    oSS << u32Length_nFrames;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetCoarseChannelSelect(uint32_t u32ChannelNo)
+{
+    stringstream oSS;
+    oSS << "?setRoachCoarseChannelSelect ";
+    oSS << u32ChannelNo;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetCoarseFFTShiftMask(uint32_t u32FFTShiftMask)
+{
+    stringstream oSS;
+    oSS << "?setRoachCoarseFFTMask ";
+    oSS << u32FFTShiftMask;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetADC0Attenuation(uint32_t u32ADC0Attenuation)
+{
+    stringstream oSS;
+    oSS << "?setRoachADC0Attenuation ";
+    oSS << u32ADC0Attenuation;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetADC1Attenuation(uint32_t u32ADC1Attenuation)
+{
+    stringstream oSS;
+    oSS << "?setRoachADC1Attenuation ";
+    oSS << u32ADC1Attenuation;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetNoiseDiodeEnabled(bool bEnabled)
+{
+    stringstream oSS;
+    oSS << "?setRoachNoiseDiodeEnabled ";
+    if(bEnabled)
+    {
+        oSS << "1";
+    }
+    else
+    {
+        oSS << "0";
+    }
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetNoiseDiodeDutyCycleEnabled(bool bEnabled)
+{
+    stringstream oSS;
+    oSS << "?setRoachNoiseDiodeDutyCycleEnabled ";
+    if(bEnabled)
+    {
+        oSS << "1";
+    }
+    else
+    {
+        oSS << "0";
+    }
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetNoiseDiodeDutyCycleOnDuration(uint32_t u32NAccums)
+{
+    stringstream oSS;
+    oSS << "?setRoachNoiseDiodeDutyCycleOnDuration ";
+    oSS << u32NAccums;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
+void cRoachAcquisitionServerKATCPClient::requestRoachSetNoiseDiodeDutyCycleOffDuration(uint32_t u32NAccums)
+{
+    stringstream oSS;
+    oSS << "?setRoachNoiseDiodeDutyCycleOffDuration ";
+    oSS << u32NAccums;
+    oSS << "\n";
+
+    sendKATCPMessage(oSS.str());
+}
+
 void cRoachAcquisitionServerKATCPClient::subscribeToSensors()
 {
     cout << "cRoachAcquisitionServerKATCPClient::subscribeToSensors(): Subscribing to sensors on KATCP server." << endl;
@@ -844,6 +1045,7 @@ void cRoachAcquisitionServerKATCPClient::subscribeToSensors()
     sendKATCPMessage(string("?sensor-sampling frequencyRFChan0 period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling frequencyRFChan1 period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling roachConnected period 1000\n"));
+    sendKATCPMessage(string("?sensor-sampling roachStokesEnabled period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling roachAccumulationLength period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling roachCoarseChannelSelect period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling roachFrequencyFs period 1000\n"));

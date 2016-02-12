@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>575</height>
+    <width>919</width>
+    <height>625</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,6 +18,113 @@
     <normaloff>:/Images/Images/AVNLogo.ico</normaloff>:/Images/Images/AVNLogo.ico</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>RoachAcquisitionServer KATCP connections</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Roach:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_roachConnection">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Not connected</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_65">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Station controller:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_stationControllerConnection">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Not connected</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="font">
@@ -29,6 +136,18 @@
       <string>Recording</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
        <layout class="QGridLayout" name="gridLayout">
         <property name="horizontalSpacing">
@@ -470,6 +589,18 @@
       <string>Roach Gateware</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
        <widget class="QLabel" name="label_9">
         <property name="font">
@@ -480,12 +611,44 @@
          </font>
         </property>
         <property name="text">
-         <string>Gateware Image</string>
+         <string>Gateware Image Launcher</string>
         </property>
        </widget>
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="4">
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item row="0" column="0">
          <widget class="QComboBox" name="comboBox_gatewareSelect">
           <property name="font">
@@ -495,7 +658,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="0" column="3">
          <widget class="QPushButton" name="pushButton_gatewareProgram">
           <property name="font">
            <font>
@@ -507,15 +670,16 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="label_10">
-          <property name="font">
-           <font>
-            <pointsize>8</pointsize>
-           </font>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="pushButton_refreshRoachGatewareList">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
           </property>
           <property name="text">
-           <string>None</string>
+           <string>Refresh List</string>
           </property>
          </widget>
         </item>
@@ -545,8 +709,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>827</width>
-           <height>625</height>
+           <width>889</width>
+           <height>649</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -570,381 +734,7 @@
             <property name="verticalSpacing">
              <number>1</number>
             </property>
-            <item row="6" column="2">
-             <widget class="QSpinBox" name="spinBox_coarseChannelFrequencyRF1_MHz">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="suffix">
-               <string> MHz</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_13">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Coarse channel frequency (baseband)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="2">
-             <widget class="QSpinBox" name="spinBox_coarseChannelFrequencyRF0_MHz">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="suffix">
-               <string> MHz</string>
-              </property>
-             </widget>
-            </item>
-            <item row="16" column="2">
-             <spacer name="verticalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>23</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="18" column="2">
-             <spacer name="verticalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>23</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="23" column="0">
-             <widget class="QLabel" name="label_46">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>10 GbE link up</string>
-              </property>
-             </widget>
-            </item>
-            <item row="13" column="2">
-             <widget class="QDoubleSpinBox" name="spinBox_noiseDiodeDutyCycleOnDuration_ms">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="suffix">
-               <string> ms</string>
-              </property>
-              <property name="decimals">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <double>31.500000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="15" column="3">
-             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOffDuration_ms">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_16">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Coarse FFT shift mask</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_14">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Coarse channel frequency (final IF)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="3">
-             <widget class="QPushButton" name="pushButton_senADC0Attenuation">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_11">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Accumulation Length</string>
-              </property>
-             </widget>
-            </item>
-            <item row="11" column="3">
-             <widget class="QPushButton" name="pushButton_toggleNoiseDiodeDutyCycleEnabled">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Toggle</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="2">
-             <widget class="QSpinBox" name="spinBox_coarseChannelSelect_binNo">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QSpinBox" name="spinBox_coarseChannelFrequencyBaseband_MHz">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="suffix">
-               <string> MHz</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="3">
-             <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_baseband">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="14" column="3">
-             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOffDuration_accums">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_23">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Accumulation Length</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QPushButton" name="pushButton_sendAccumulationLength_ms">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="15" column="2">
-             <widget class="QDoubleSpinBox" name="spinBox_noiseDiodeDutyCycleOffDuration_ms">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="suffix">
-               <string> ms</string>
-              </property>
-              <property name="decimals">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <double>31.500000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="13" column="3">
-             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOnDuration_ms">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="12" column="2">
-             <widget class="QSpinBox" name="spinBox_noiseDiodeDutyCycleOnDuration_accums">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-             </widget>
-            </item>
-            <item row="14" column="0">
-             <widget class="QLabel" name="label_37">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Noise diode duty cycle-off duration</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_accumulationLength_ms">
               <property name="maximumSize">
                <size>
@@ -964,24 +754,24 @@
                <number>1</number>
               </property>
               <property name="maximum">
-               <double>31.500000000000000</double>
+               <double>999999999999999929757289024535551219930759168.000000000000000</double>
               </property>
              </widget>
             </item>
-            <item row="25" column="0">
-             <widget class="QLabel" name="label_47">
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_13">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
                </font>
               </property>
               <property name="text">
-               <string>FPGA clock frequency</string>
+               <string>Coarse channel frequency (baseband)</string>
               </property>
              </widget>
             </item>
-            <item row="22" column="2">
-             <spacer name="verticalSpacer_13">
+            <item row="17" column="2">
+             <spacer name="verticalSpacer_2">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
@@ -996,74 +786,8 @@
               </property>
              </spacer>
             </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_15">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Coarse channel frequency (RF chan 0)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="3">
-             <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_finalIF">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <widget class="QPushButton" name="pushButton_sendAccumulationLength_frames">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="3">
-             <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_RF0">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="21" column="2">
-             <spacer name="verticalSpacer_6">
+            <item row="19" column="2">
+             <spacer name="verticalSpacer_3">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
@@ -1078,8 +802,20 @@
               </property>
              </spacer>
             </item>
-            <item row="4" column="2">
-             <widget class="QSpinBox" name="spinBox_coarseChannelFrequencyIF_MHz">
+            <item row="24" column="0">
+             <widget class="QLabel" name="label_46">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>10 GbE link up</string>
+              </property>
+             </widget>
+            </item>
+            <item row="14" column="2">
+             <widget class="QDoubleSpinBox" name="spinBox_noiseDiodeDutyCycleOnDuration_ms">
               <property name="maximumSize">
                <size>
                 <width>100</width>
@@ -1092,69 +828,18 @@
                </font>
               </property>
               <property name="suffix">
-               <string> MHz</string>
+               <string> ms</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>100000000000.000000000000000</double>
               </property>
              </widget>
             </item>
-            <item row="12" column="3">
-             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOnDuration_accums">
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item row="15" column="0">
-             <widget class="QLabel" name="label_38">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Noise diode duty cycle-off duration</string>
-              </property>
-             </widget>
-            </item>
-            <item row="13" column="0">
-             <widget class="QLabel" name="label_22">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Noise diode duty cycle-on duration</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="2">
-             <widget class="QSpinBox" name="spinBox_coarseFFTShiftMask">
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="3">
-             <widget class="QPushButton" name="pushButton_sendCoarseFFTMask">
+            <item row="16" column="3">
+             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOffDuration_ms">
               <property name="maximumSize">
                <size>
                 <width>50</width>
@@ -1172,19 +857,429 @@
              </widget>
             </item>
             <item row="8" column="0">
-             <widget class="QLabel" name="label_17">
+             <widget class="QLabel" name="label_16">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
                </font>
               </property>
               <property name="text">
-               <string>ADC chan 0 attenuation</string>
+               <string>Coarse FFT shift mask</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Coarse channel frequency (final IF)</string>
               </property>
              </widget>
             </item>
             <item row="9" column="3">
-             <widget class="QPushButton" name="pushButton_sendADC1Attenuation">
+             <widget class="QPushButton" name="pushButton_senADC0Attenuation">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Accumulation Length</string>
+              </property>
+             </widget>
+            </item>
+            <item row="12" column="3">
+             <widget class="QPushButton" name="pushButton_toggleNoiseDiodeDutyCycleEnabled">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Toggle</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QSpinBox" name="spinBox_coarseChannelSelect_binNo">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="3">
+             <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_baseband">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="15" column="3">
+             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOffDuration_accums">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <widget class="QLabel" name="label_ADC0Attenuation">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Unknown</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_23">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Accumulation Length</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QPushButton" name="pushButton_sendAccumulationLength_ms">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="16" column="2">
+             <widget class="QDoubleSpinBox" name="spinBox_noiseDiodeDutyCycleOffDuration_ms">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="suffix">
+               <string> ms</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>100000000000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="14" column="3">
+             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOnDuration_ms">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="13" column="2">
+             <widget class="QSpinBox" name="spinBox_noiseDiodeDutyCycleOnDuration_accums">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="label_coarseChannelSelect_baseband">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Unknown</string>
+              </property>
+             </widget>
+            </item>
+            <item row="15" column="0">
+             <widget class="QLabel" name="label_37">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Noise diode duty cycle-off duration</string>
+              </property>
+             </widget>
+            </item>
+            <item row="26" column="0">
+             <widget class="QLabel" name="label_47">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>FPGA clock frequency</string>
+              </property>
+             </widget>
+            </item>
+            <item row="23" column="2">
+             <spacer name="verticalSpacer_13">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>23</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Coarse channel frequency (RF chan 0)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="3">
+             <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_finalIF">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pushButton_sendAccumulationLength_frames">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="3">
+             <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_RF0">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="22" column="2">
+             <spacer name="verticalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>23</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="16" column="0">
+             <widget class="QLabel" name="label_38">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Noise diode duty cycle-off duration</string>
+              </property>
+             </widget>
+            </item>
+            <item row="13" column="3">
+             <widget class="QPushButton" name="pushButton_sendNoiseDiodeDutyCycleOnDuration_accums">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="2">
+             <widget class="QSpinBox" name="spinBox_coarseFFTShiftMask">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="maximum">
+               <number>10000000</number>
+              </property>
+             </widget>
+            </item>
+            <item row="14" column="0">
+             <widget class="QLabel" name="label_22">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Noise diode duty cycle-on duration</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="3">
+             <widget class="QPushButton" name="pushButton_sendCoarseFFTMask">
               <property name="maximumSize">
                <size>
                 <width>50</width>
@@ -1202,6 +1297,36 @@
              </widget>
             </item>
             <item row="9" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>ADC chan 0 attenuation</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="3">
+             <widget class="QPushButton" name="pushButton_sendADC1Attenuation">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="0">
              <widget class="QLabel" name="label_18">
               <property name="font">
                <font>
@@ -1213,7 +1338,7 @@
               </property>
              </widget>
             </item>
-            <item row="8" column="2">
+            <item row="9" column="2">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_ADCChan0Attenuation">
               <property name="maximumSize">
                <size>
@@ -1237,7 +1362,7 @@
               </property>
              </widget>
             </item>
-            <item row="9" column="2">
+            <item row="10" column="2">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_ADCChan1Attenuation">
               <property name="maximumSize">
                <size>
@@ -1261,7 +1386,7 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
+            <item row="1" column="2">
              <widget class="QSpinBox" name="spinBox_accumulationLength_nFrames">
               <property name="maximumSize">
                <size>
@@ -1277,9 +1402,12 @@
               <property name="suffix">
                <string> frames</string>
               </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
              </widget>
             </item>
-            <item row="2" column="0">
+            <item row="3" column="0">
              <widget class="QLabel" name="label_12">
               <property name="font">
                <font>
@@ -1291,7 +1419,7 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="3">
+            <item row="3" column="3">
              <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_binNo">
               <property name="maximumSize">
                <size>
@@ -1309,7 +1437,7 @@
               </property>
              </widget>
             </item>
-            <item row="6" column="0">
+            <item row="7" column="0">
              <widget class="QLabel" name="label_24">
               <property name="font">
                <font>
@@ -1321,7 +1449,7 @@
               </property>
              </widget>
             </item>
-            <item row="6" column="3">
+            <item row="7" column="3">
              <widget class="QPushButton" name="pushButton_sendCoarseChannelSelect_RF1">
               <property name="maximumSize">
                <size>
@@ -1339,7 +1467,7 @@
               </property>
              </widget>
             </item>
-            <item row="10" column="0">
+            <item row="11" column="0">
              <widget class="QLabel" name="label_19">
               <property name="font">
                <font>
@@ -1351,7 +1479,7 @@
               </property>
              </widget>
             </item>
-            <item row="14" column="2">
+            <item row="15" column="2">
              <widget class="QSpinBox" name="spinBox_noiseDiodeDutyCycleOffDuration_accums">
               <property name="maximumSize">
                <size>
@@ -1364,9 +1492,12 @@
                 <pointsize>8</pointsize>
                </font>
               </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
              </widget>
             </item>
-            <item row="12" column="0">
+            <item row="13" column="0">
              <widget class="QLabel" name="label_20">
               <property name="font">
                <font>
@@ -1378,7 +1509,7 @@
               </property>
              </widget>
             </item>
-            <item row="10" column="3">
+            <item row="11" column="3">
              <widget class="QPushButton" name="pushButton_toggleNoiseDiodeEnabled">
               <property name="maximumSize">
                <size>
@@ -1396,7 +1527,7 @@
               </property>
              </widget>
             </item>
-            <item row="11" column="0">
+            <item row="12" column="0">
              <widget class="QLabel" name="label_21">
               <property name="font">
                <font>
@@ -1408,7 +1539,7 @@
               </property>
              </widget>
             </item>
-            <item row="21" column="0">
+            <item row="22" column="0">
              <widget class="QLabel" name="label_44">
               <property name="font">
                <font>
@@ -1420,7 +1551,7 @@
               </property>
              </widget>
             </item>
-            <item row="24" column="0">
+            <item row="25" column="0">
              <widget class="QLabel" name="label_48">
               <property name="font">
                <font>
@@ -1432,7 +1563,31 @@
               </property>
              </widget>
             </item>
-            <item row="20" column="2">
+            <item row="17" column="0">
+             <widget class="QLabel" name="label_39">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>ADC 0 over range</string>
+              </property>
+             </widget>
+            </item>
+            <item row="18" column="0">
+             <widget class="QLabel" name="label_40">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>ADC 1 over range</string>
+              </property>
+             </widget>
+            </item>
+            <item row="21" column="2">
              <spacer name="verticalSpacer_5">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1448,31 +1603,7 @@
               </property>
              </spacer>
             </item>
-            <item row="16" column="0">
-             <widget class="QLabel" name="label_39">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>ADC 0 over range</string>
-              </property>
-             </widget>
-            </item>
-            <item row="17" column="0">
-             <widget class="QLabel" name="label_40">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>ADC 1 over range</string>
-              </property>
-             </widget>
-            </item>
-            <item row="18" column="0">
+            <item row="19" column="0">
              <widget class="QLabel" name="label_41">
               <property name="font">
                <font>
@@ -1484,7 +1615,7 @@
               </property>
              </widget>
             </item>
-            <item row="19" column="0">
+            <item row="20" column="0">
              <widget class="QLabel" name="label_42">
               <property name="font">
                <font>
@@ -1496,7 +1627,7 @@
               </property>
              </widget>
             </item>
-            <item row="20" column="0">
+            <item row="21" column="0">
              <widget class="QLabel" name="label_43">
               <property name="font">
                <font>
@@ -1508,7 +1639,31 @@
               </property>
              </widget>
             </item>
-            <item row="17" column="2">
+            <item row="26" column="1">
+             <widget class="QLabel" name="label_fpgaClock">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Unknown</string>
+              </property>
+             </widget>
+            </item>
+            <item row="23" column="0">
+             <widget class="QLabel" name="label_45">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>10 GbE Tx overflow</string>
+              </property>
+             </widget>
+            </item>
+            <item row="18" column="2">
              <spacer name="verticalSpacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1524,8 +1679,8 @@
               </property>
              </spacer>
             </item>
-            <item row="25" column="1">
-             <widget class="QLabel" name="label_fpgaClock">
+            <item row="23" column="1">
+             <widget class="QLabel" name="label_10GbETxOverflow">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
@@ -1536,19 +1691,19 @@
               </property>
              </widget>
             </item>
-            <item row="22" column="0">
-             <widget class="QLabel" name="label_45">
+            <item row="25" column="1">
+             <widget class="QLabel" name="label_ppsCount">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
                </font>
               </property>
               <property name="text">
-               <string>10 GbE Tx overflow</string>
+               <string>Unknown</string>
               </property>
              </widget>
             </item>
-            <item row="25" column="2">
+            <item row="26" column="2">
              <spacer name="verticalSpacer_16">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1564,8 +1719,8 @@
               </property>
              </spacer>
             </item>
-            <item row="22" column="1">
-             <widget class="QLabel" name="label_10GbETxOverflow">
+            <item row="24" column="1">
+             <widget class="QLabel" name="label_10GbELinkUp">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
@@ -1576,7 +1731,7 @@
               </property>
              </widget>
             </item>
-            <item row="24" column="2">
+            <item row="25" column="2">
              <spacer name="verticalSpacer_15">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1592,8 +1747,8 @@
               </property>
              </spacer>
             </item>
-            <item row="24" column="1">
-             <widget class="QLabel" name="label_ppsCount">
+            <item row="22" column="1">
+             <widget class="QLabel" name="label_queueFull">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
@@ -1604,8 +1759,8 @@
               </property>
              </widget>
             </item>
-            <item row="23" column="1">
-             <widget class="QLabel" name="label_10GbELinkUp">
+            <item row="21" column="1">
+             <widget class="QLabel" name="label_packetiserOverflow">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
@@ -1616,7 +1771,7 @@
               </property>
              </widget>
             </item>
-            <item row="23" column="2">
+            <item row="24" column="2">
              <spacer name="verticalSpacer_14">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1632,7 +1787,7 @@
               </property>
              </spacer>
             </item>
-            <item row="19" column="2">
+            <item row="20" column="2">
              <spacer name="verticalSpacer_4">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1648,8 +1803,8 @@
               </property>
              </spacer>
             </item>
-            <item row="21" column="1">
-             <widget class="QLabel" name="label_queueFull">
+            <item row="19" column="1">
+             <widget class="QLabel" name="label_coarseFFT0OverRange">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
@@ -1661,18 +1816,6 @@
              </widget>
             </item>
             <item row="20" column="1">
-             <widget class="QLabel" name="label_packetiserOverflow">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Unknown</string>
-              </property>
-             </widget>
-            </item>
-            <item row="19" column="1">
              <widget class="QLabel" name="label_coarseFFT1OverRange">
               <property name="font">
                <font>
@@ -1685,18 +1828,6 @@
              </widget>
             </item>
             <item row="18" column="1">
-             <widget class="QLabel" name="label_coarseFFT0OverRange">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Unknown</string>
-              </property>
-             </widget>
-            </item>
-            <item row="17" column="1">
              <widget class="QLabel" name="label_adc1OverRange">
               <property name="font">
                <font>
@@ -1708,7 +1839,7 @@
               </property>
              </widget>
             </item>
-            <item row="16" column="1">
+            <item row="17" column="1">
              <widget class="QLabel" name="label_adc0OverRange">
               <property name="font">
                <font>
@@ -1720,7 +1851,7 @@
               </property>
              </widget>
             </item>
-            <item row="15" column="1">
+            <item row="16" column="1">
              <widget class="QLabel" name="label_noiseDiodeDutyCycleOffDuration_ms">
               <property name="font">
                <font>
@@ -1732,7 +1863,7 @@
               </property>
              </widget>
             </item>
-            <item row="14" column="1">
+            <item row="15" column="1">
              <widget class="QLabel" name="label_noiseDiodeDutyCycleOffDuration_accums">
               <property name="font">
                <font>
@@ -1744,7 +1875,7 @@
               </property>
              </widget>
             </item>
-            <item row="13" column="1">
+            <item row="14" column="1">
              <widget class="QLabel" name="label_noiseDiodeDutyCycleOnDuration_ms">
               <property name="font">
                <font>
@@ -1756,7 +1887,7 @@
               </property>
              </widget>
             </item>
-            <item row="12" column="1">
+            <item row="13" column="1">
              <widget class="QLabel" name="label_noiseDiodeDutyCycleOnDuration_accums">
               <property name="font">
                <font>
@@ -1768,7 +1899,7 @@
               </property>
              </widget>
             </item>
-            <item row="11" column="1">
+            <item row="12" column="1">
              <widget class="QLabel" name="label_noiseDiodeDutyCycleEnabled">
               <property name="font">
                <font>
@@ -1780,7 +1911,7 @@
               </property>
              </widget>
             </item>
-            <item row="10" column="1">
+            <item row="11" column="1">
              <widget class="QLabel" name="label_noideDiodeEnabled">
               <property name="font">
                <font>
@@ -1792,7 +1923,7 @@
               </property>
              </widget>
             </item>
-            <item row="9" column="1">
+            <item row="10" column="1">
              <widget class="QLabel" name="label_ADC1Attenuation">
               <property name="font">
                <font>
@@ -1805,18 +1936,6 @@
              </widget>
             </item>
             <item row="8" column="1">
-             <widget class="QLabel" name="label_ADC0Attenuation">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Unknown</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
              <widget class="QLabel" name="label_coarseFFTShiftMask">
               <property name="font">
                <font>
@@ -1828,7 +1947,7 @@
               </property>
              </widget>
             </item>
-            <item row="6" column="1">
+            <item row="7" column="1">
              <widget class="QLabel" name="label_coarseChannelSelect_RF1">
               <property name="font">
                <font>
@@ -1840,7 +1959,7 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
+            <item row="6" column="1">
              <widget class="QLabel" name="label_coarseChannelSelect_RF0">
               <property name="font">
                <font>
@@ -1852,7 +1971,7 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
+            <item row="5" column="1">
              <widget class="QLabel" name="label_coarseChannelSelect_finalIF">
               <property name="font">
                <font>
@@ -1865,18 +1984,6 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLabel" name="label_coarseChannelSelect_baseband">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Unknown</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
              <widget class="QLabel" name="label_coarseChannelSelect_binNo">
               <property name="font">
                <font>
@@ -1888,7 +1995,7 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="2" column="1">
              <widget class="QLabel" name="label_accumulationLength_ms">
               <property name="font">
                <font>
@@ -1900,7 +2007,7 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
+            <item row="1" column="1">
              <widget class="QLabel" name="label_accumulationLength_nFrames">
               <property name="font">
                <font>
@@ -1912,7 +2019,7 @@
               </property>
              </widget>
             </item>
-            <item row="11" column="2">
+            <item row="12" column="2">
              <spacer name="verticalSpacer_17">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1928,7 +2035,7 @@
               </property>
              </spacer>
             </item>
-            <item row="10" column="2">
+            <item row="11" column="2">
              <spacer name="verticalSpacer_18">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1943,6 +2050,148 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_stokesEnabled">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Unknown</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_25">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Stokes enabled</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <spacer name="verticalSpacer_26">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>23</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="3">
+             <widget class="QPushButton" name="pushButton_toggleStokesEnabled">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Toggle</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_coarseChannelFrequencyIF_MHz">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="suffix">
+               <string> MHz</string>
+              </property>
+              <property name="maximum">
+               <double>100000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="2">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_coarseChannelFrequencyRF0_MHz">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="suffix">
+               <string> MHz</string>
+              </property>
+              <property name="maximum">
+               <double>100000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="2">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_coarseChannelFrequencyRF1_MHz">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="suffix">
+               <string> MHz</string>
+              </property>
+              <property name="maximum">
+               <double>100000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_coarseChannelFrequencyBaseband_MHz">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="suffix">
+               <string> MHz</string>
+              </property>
+              <property name="maximum">
+               <double>100000.000000000000000</double>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>

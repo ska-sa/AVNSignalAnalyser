@@ -35,6 +35,7 @@ private:
 
     QTimer                                                  m_oSecondTimer;
     QTimer                                                  m_oTwoSecondTimer;
+    QTimer                                                  m_o200msTimer;
 
     Qt::TimeSpec                                            m_eTimeSpec;
 
@@ -49,9 +50,13 @@ private:
     double                                                  m_dFrequencyRFChan0_MHz;
     double                                                  m_dFrequencyRFChan1_MHz;
 
+    std::vector<std::string>                                m_vstrRoachGatewareList;
     bool                                                    m_bRoachKATCPConnected;
+    bool                                                    m_bStokesEnabled;
     uint32_t                                                m_u32AccumulationLength_nFrames;
+    double                                                  m_dSingleAccumulationLength_ms;
     uint32_t                                                m_u32CoarseChannelSelect;
+    double                                                  m_dCourseChannelSelectBaseband_MHz;
     double                                                  m_dFrequencyFs_MHz;
     uint32_t                                                m_u32SizeOfCoarseFFT_nSamp;
     uint32_t                                                m_u32SizeOfFineFFT_nSamp;
@@ -91,12 +96,14 @@ private:
     void                                                    frequencyRFChan0_callback(int64_t i64Timestamp_us, double dFrequencyRFChan0_MHz);
     void                                                    frequencyRFChan1_callback(int64_t i64Timestamp_us, double dFrequencyRFChan1_MHz);
 
+    void                                                    roachGatewareList_callback(const std::vector<std::string> &vstrGatewareList);
     void                                                    roachKATCPConnected_callback(bool bConnected);
+    void                                                    stokesEnabled_callback(bool bEnabled);
     void                                                    accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames);
     void                                                    coarseChannelSelect_callback(int64_t i64Timestamp_us, uint32_t u32ChannelNo);
     void                                                    frequencyFs_callback(double dFrequencyFs_MHz);
     void                                                    sizeOfCoarseFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp);
-    void                                                    sizeOfFineFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp);
+    void                                                    sizeOfFineFFT_callback(uint32_t u32SizeOfFineFFT_nSamp);
     void                                                    coarseFFTShiftMask_callback(int64_t i64Timestamp_us, uint32_t u32ShiftMask);
     void                                                    attenuationADCChan0_callback(int64_t i64Timestamp_us, double dADCAttenuationChan0_dB);
     void                                                    attenuationADCChan1_callback(int64_t i64Timestamp_us, double dADCAttenuationChan1_dB);
@@ -115,6 +122,7 @@ private:
 
 private slots:
     void                                                    slotSecondTimerTrigger();
+    void                                                    slot200msTimerTriger();
     void                                                    slotTwoSecondTimerTrigger();
     void                                                    slotStartStopRecordingClicked();
     void                                                    slotRecordingInfoUpdate(const QString &qstrFilename,
@@ -127,6 +135,30 @@ private slots:
 
     //Update display Roach parameters in the GUI (These are needed for queued connections
     void                                                    slotUpdateRoachGUIParameters();
+    void                                                    slotUpdateRoachGatewareList();
+
+    //Slots for push buttons for Roach control
+    void                                                    slotRefreshGatewareList();
+    void                                                    slotProgram();
+    void                                                    slotToggleStokes();
+    void                                                    slotSendAccumulationLength_nFrames();
+    void                                                    slotSendAccumulationLength_ms();
+    void                                                    slotSendCoarseChannelSelect_binNo();
+    void                                                    slotSendCoarseChannelSelect_baseband();
+    void                                                    slotSendCoarseChannelSelect_finalIF();
+    void                                                    slotSendCoarseChannelSelect_RF0();
+    void                                                    slotSendCoarseChannelSelect_RF1();
+    void                                                    slotSendCoarseFFTShiftMask();
+    void                                                    slotSendADC0Attenuation();
+    void                                                    slotSendADC1Attenuation();
+    void                                                    slotToggleNoiseDiodeEnabled();
+    void                                                    slotToggleNoiseDiodeDutyCycleEnabled();
+    void                                                    slotSendNoiseDiodeDutyCycleOnDuration_nAccums();
+    void                                                    slotSendNoiseDiodeDutyCycleOnDuration_ms();
+    void                                                    slotSendNoiseDiodeDutyCycleOffDuration_nAccums();
+    void                                                    slotSendNoiseDiodeDutyCycleOffDuration_ms();
+
+
 
 signals:
     void                                                    sigKATCPSocketConnected(bool bConnected);
@@ -137,7 +169,7 @@ signals:
     void                                                    sigRecordingStarted();
     void                                                    sigRecordingStoppped();
 
-    void                                                    sigUpdateRoachGUIParameters();
+    void                                                    sigUpdateRoachGatewareList();
 
 };
 

@@ -33,7 +33,9 @@ public:
         virtual void                                    frequencyRFChan0_callback(int64_t i64Timestamp_us, double dFrequencyRFChan0_MHz) = 0;
         virtual void                                    frequencyRFChan1_callback(int64_t i64Timestamp_us, double dFrequencyRFChan1_MHz) = 0;
 
+        virtual void                                    roachGatewareList_callback(const std::vector<std::string> &vstrGatewareList) = 0;
         virtual void                                    roachKATCPConnected_callback(bool bConnected) = 0;
+        virtual void                                    stokesEnabled_callback(bool bEnabled) = 0;
         virtual void                                    accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames) = 0;
         virtual void                                    coarseChannelSelect_callback(int64_t i64Timestamp_us, uint32_t u32ChannelNo) = 0;
         virtual void                                    frequencyFs_callback(double dFrequencyFs_MHz) = 0;
@@ -63,6 +65,19 @@ public:
     void                                                requestRecordingStatus();
     void                                                requestRecordingInfoUpdate();
 
+    void                                                requestRoachGatewareList();
+    void                                                requestRoachProgram(const std::string strScriptPath);
+    void                                                requestRoachSetStokesEnabled(bool bEnabled);
+    void                                                requestRoachSetAccumulationLength(uint32_t u32Length_nFrames);
+    void                                                requestRoachSetCoarseChannelSelect(uint32_t u32ChannelNo);
+    void                                                requestRoachSetCoarseFFTShiftMask(uint32_t u32FFTShiftMask);
+    void                                                requestRoachSetADC0Attenuation(uint32_t u32ADC0Attenuation);
+    void                                                requestRoachSetADC1Attenuation(uint32_t u32ADC1Attenuation);
+    void                                                requestRoachSetNoiseDiodeEnabled(bool bEnabled);
+    void                                                requestRoachSetNoiseDiodeDutyCycleEnabled(bool bEnabled);
+    void                                                requestRoachSetNoiseDiodeDutyCycleOnDuration(uint32_t u32NAccums);
+    void                                                requestRoachSetNoiseDiodeDutyCycleOffDuration(uint32_t u32NAccums);
+
     void                                                subscribeToSensors();
 
 private:
@@ -87,7 +102,9 @@ private:
     void                                                sendFrequencyRFChan0(int64_t i64Timestamp_us, double dFreqencyRF_MHz);
     void                                                sendFrequencyRFChan1(int64_t i64Timestamp_us, double dFreqencyRF_MHz);
 
+    void                                                sendRoachGatewareList(const std::vector<std::string> &vstrGatewareList);
     void                                                sendRoachKATCPConnected(bool bConnected);
+    void                                                sendStokesEnabled(bool bEnabled);
     void                                                sendAccumulationLength(int64_t i64Timestamp_us, uint32_t u32NFrames);
     void                                                sendCoarseChannelSelect(int64_t i64Timestamp_us, uint32_t u32ChannelNo);
     void                                                sendFrequencyFs(double dFrequencyFs_MHz);

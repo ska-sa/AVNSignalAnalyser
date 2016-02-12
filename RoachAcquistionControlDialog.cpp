@@ -4,6 +4,7 @@
 //Libary includes
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
 #include <boost/make_shared.hpp>
+#include <boost/math/special_functions/round.hpp>
 #endif
 
 //Local includes
@@ -24,8 +25,11 @@ cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(const QString &qstr
     m_dFrequencyRFChan1_MHz(0.0),
 
     m_bRoachKATCPConnected(false),
+    m_bStokesEnabled(false),
     m_u32AccumulationLength_nFrames(0),
+    m_dSingleAccumulationLength_ms(0.0),
     m_u32CoarseChannelSelect(0),
+    m_dCourseChannelSelectBaseband_MHz(0.0),
     m_dFrequencyFs_MHz(0.0),
     m_u32SizeOfCoarseFFT_nSamp(0),
     m_u32SizeOfFineFFT_nSamp(0),
@@ -74,19 +78,44 @@ void cRoachAcquistionControlDialog::connect(const QString &qstrHostname, uint16_
 
     m_oSecondTimer.start(1000);
     m_oTwoSecondTimer.start(2000);
+    m_o200msTimer.start(200);
 }
 
 void cRoachAcquistionControlDialog::connectSignalToSlots()
 {
+    //Timers
     QObject::connect( &m_oSecondTimer, SIGNAL(timeout()), this, SLOT(slotSecondTimerTrigger()) );
     QObject::connect( &m_oTwoSecondTimer, SIGNAL(timeout()), this, SLOT(slotTwoSecondTimerTrigger()) );
+    QObject::connect( &m_o200msTimer, SIGNAL(timeout()), this, SLOT(slot200msTimerTriger()) );
+
+    //Recording
     QObject::connect( m_pUI->pushButton_startStopRecording, SIGNAL(pressed()), this, SLOT(slotStartStopRecordingClicked()) );
     QObject::connect( m_pUI->comboBox_timeZone, SIGNAL(currentIndexChanged(QString)), this, SLOT(slotTimeZoneChanged(QString)) );
-
     //Select last editted option
     QObject::connect( m_pUI->timeEdit_recordAt, SIGNAL(editingFinished()), m_pUI->radioButton_recordAt, SLOT(click()) );
     QObject::connect( m_pUI->doubleSpinBox_recordIn, SIGNAL(editingFinished()), m_pUI->radioButton_recordIn, SLOT(click()) );
     QObject::connect( m_pUI->doubleSpinBox_recordFor, SIGNAL(editingFinished()), m_pUI->radioButton_recordFor, SLOT(click()) );
+
+    //Roach FPGA / registers
+    QObject::connect( m_pUI->pushButton_refreshRoachGatewareList, SIGNAL(clicked(bool)), this, SLOT(slotRefreshGatewareList()) );
+    QObject::connect( m_pUI->pushButton_gatewareProgram, SIGNAL(clicked()), this, SLOT(slotProgram()) );
+    QObject::connect( m_pUI->pushButton_toggleStokesEnabled, SIGNAL(clicked()), this, SLOT(slotToggleStokes()) );
+    QObject::connect( m_pUI->pushButton_sendAccumulationLength_frames, SIGNAL(clicked()), this, SLOT(slotSendAccumulationLength_nFrames()) );
+    QObject::connect( m_pUI->pushButton_sendAccumulationLength_ms, SIGNAL(clicked()), this, SLOT(slotSendAccumulationLength_ms()) );
+    QObject::connect( m_pUI->pushButton_sendCoarseChannelSelect_binNo, SIGNAL(clicked()), this, SLOT(slotSendCoarseChannelSelect_binNo()) );
+    QObject::connect( m_pUI->pushButton_sendCoarseChannelSelect_baseband, SIGNAL(clicked()), this, SLOT(slotSendCoarseChannelSelect_baseband()) );
+    QObject::connect( m_pUI->pushButton_sendCoarseChannelSelect_finalIF, SIGNAL(clicked()), this, SLOT(slotSendCoarseChannelSelect_finalIF()) );
+    QObject::connect( m_pUI->pushButton_sendCoarseChannelSelect_RF0, SIGNAL(clicked()), this, SLOT(slotSendCoarseChannelSelect_RF0()) );
+    QObject::connect( m_pUI->pushButton_sendCoarseChannelSelect_RF1, SIGNAL(clicked()), this, SLOT(slotSendCoarseChannelSelect_RF1()) );
+    QObject::connect( m_pUI->pushButton_sendCoarseFFTMask, SIGNAL(clicked()), this, SLOT(slotSendCoarseFFTShiftMask()) );
+    QObject::connect( m_pUI->pushButton_senADC0Attenuation, SIGNAL(clicked()), this, SLOT(slotSendADC0Attenuation()) );
+    QObject::connect( m_pUI->pushButton_sendADC1Attenuation, SIGNAL(clicked()), this, SLOT(slotSendADC1Attenuation()) );
+    QObject::connect( m_pUI->pushButton_toggleNoiseDiodeEnabled, SIGNAL(clicked()), this, SLOT(slotToggleNoiseDiodeEnabled()) );
+    QObject::connect( m_pUI->pushButton_toggleNoiseDiodeDutyCycleEnabled, SIGNAL(clicked()), this, SLOT(slotToggleNoiseDiodeDutyCycleEnabled()) );
+    QObject::connect( m_pUI->pushButton_sendNoiseDiodeDutyCycleOnDuration_accums, SIGNAL(clicked()), this, SLOT(slotSendNoiseDiodeDutyCycleOnDuration_nAccums()) );
+    QObject::connect( m_pUI->pushButton_sendNoiseDiodeDutyCycleOnDuration_ms, SIGNAL(clicked()), this, SLOT(slotSendNoiseDiodeDutyCycleOnDuration_ms()) );
+    QObject::connect( m_pUI->pushButton_sendNoiseDiodeDutyCycleOffDuration_accums, SIGNAL(clicked()), this, SLOT(slotSendNoiseDiodeDutyCycleOffDuration_nAccums()) );
+    QObject::connect( m_pUI->pushButton_sendNoiseDiodeDutyCycleOffDuration_ms, SIGNAL(clicked()), this, SLOT(slotSendNoiseDiodeDutyCycleOffDuration_ms()) );
 
 
     //Call backs that alter the GUI decoupled by Queued connections to be executed by the GUI thread
@@ -97,8 +126,7 @@ void cRoachAcquistionControlDialog::connectSignalToSlots()
     QObject::connect( this, SIGNAL(sigRecordingStarted()), this, SLOT(slotRecordingStarted()), Qt::QueuedConnection);
     QObject::connect( this, SIGNAL(sigRecordingStoppped()), this, SLOT(slotRecordingStoppped()), Qt::QueuedConnection);
 
-    QObject::connect( this, SIGNAL(sigUpdateRoachGUIParameters()), this, SLOT(slotUpdateRoachGUIParameters()), Qt::QueuedConnection);
-
+    QObject::connect( this, SIGNAL(sigUpdateRoachGatewareList()), this, SLOT(slotUpdateRoachGatewareList()), Qt::QueuedConnection);
 }
 
 void cRoachAcquistionControlDialog::slotSecondTimerTrigger()
@@ -146,6 +174,12 @@ void cRoachAcquistionControlDialog::slotTwoSecondTimerTrigger()
     }
 
     m_u32PreviousPPSCount = m_u32PPSCount;
+}
+
+void cRoachAcquistionControlDialog::slot200msTimerTriger()
+{
+    //Roach registers are updated in the GUI every 200 ms
+    slotUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::slotStartStopRecordingClicked()
@@ -237,8 +271,6 @@ void cRoachAcquistionControlDialog::stationControllerKATCPConnected_callback(boo
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_bStationControllerKATCPConnected = bConnected;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::actualAntennaAz_callback(int64_t i64Timestamp_us, double dAzimuth_deg)
@@ -266,8 +298,6 @@ void cRoachAcquistionControlDialog::frequencyRFChan0_callback(int64_t i64Timesta
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_dFrequencyRFChan0_MHz = dFrequencyRFChan0_MHz;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::frequencyRFChan1_callback(int64_t i64Timestamp_us, double dFrequencyRFChan1_MHz)
@@ -275,8 +305,17 @@ void cRoachAcquistionControlDialog::frequencyRFChan1_callback(int64_t i64Timesta
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_dFrequencyRFChan1_MHz = dFrequencyRFChan1_MHz;
+}
 
-    sigUpdateRoachGUIParameters();
+void cRoachAcquistionControlDialog::roachGatewareList_callback(const std::vector<std::string> &vstrGatewareList)
+{
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+
+        m_vstrRoachGatewareList = vstrGatewareList;
+    }
+
+    sigUpdateRoachGatewareList();
 }
 
 void cRoachAcquistionControlDialog::roachKATCPConnected_callback(bool bConnected)
@@ -284,8 +323,13 @@ void cRoachAcquistionControlDialog::roachKATCPConnected_callback(bool bConnected
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_bRoachKATCPConnected = bConnected;
+}
 
-    sigUpdateRoachGUIParameters();
+void cRoachAcquistionControlDialog::stokesEnabled_callback(bool bEnabled)
+{
+    boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+
+    m_bStokesEnabled = bEnabled;
 }
 
 void cRoachAcquistionControlDialog::accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames)
@@ -293,8 +337,6 @@ void cRoachAcquistionControlDialog::accumulationLength_callback(int64_t i64Times
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32AccumulationLength_nFrames = u32NFrames;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::coarseChannelSelect_callback(int64_t i64Timestamp_us, uint32_t u32ChannelNo)
@@ -303,7 +345,7 @@ void cRoachAcquistionControlDialog::coarseChannelSelect_callback(int64_t i64Time
 
     m_u32CoarseChannelSelect = u32ChannelNo;
 
-    sigUpdateRoachGUIParameters();
+    m_dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
 }
 
 void cRoachAcquistionControlDialog::frequencyFs_callback(double dFrequencyFs_MHz)
@@ -312,7 +354,14 @@ void cRoachAcquistionControlDialog::frequencyFs_callback(double dFrequencyFs_MHz
 
     m_dFrequencyFs_MHz = dFrequencyFs_MHz;
 
-    sigUpdateRoachGUIParameters();
+    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
+    if(m_u32SizeOfFineFFT_nSamp)
+    {
+        m_dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
+    }
+    m_dSingleAccumulationLength_ms *= 1000;
+
+    m_dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
 }
 
 void cRoachAcquistionControlDialog::sizeOfCoarseFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp)
@@ -321,16 +370,28 @@ void cRoachAcquistionControlDialog::sizeOfCoarseFFT_callback(uint32_t u32SizeOfC
 
     m_u32SizeOfCoarseFFT_nSamp = u32SizeOfCoarseFFT_nSamp;
 
-    sigUpdateRoachGUIParameters();
+    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
+    if(m_u32SizeOfFineFFT_nSamp)
+    {
+        m_dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
+    }
+    m_dSingleAccumulationLength_ms *= 1000;
+
+    m_dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
 }
 
-void cRoachAcquistionControlDialog::sizeOfFineFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp)
+void cRoachAcquistionControlDialog::sizeOfFineFFT_callback(uint32_t u32SizeOfFineFFT_nSamp)
 {
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
-    m_u32SizeOfFineFFT_nSamp = u32SizeOfCoarseFFT_nSamp;
+    m_u32SizeOfFineFFT_nSamp = u32SizeOfFineFFT_nSamp;
 
-    sigUpdateRoachGUIParameters();
+    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
+    if(m_u32SizeOfFineFFT_nSamp)
+    {
+        m_dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
+    }
+    m_dSingleAccumulationLength_ms *= 1000;
 }
 
 void cRoachAcquistionControlDialog::coarseFFTShiftMask_callback(int64_t i64Timestamp_us, uint32_t u32ShiftMask)
@@ -338,8 +399,6 @@ void cRoachAcquistionControlDialog::coarseFFTShiftMask_callback(int64_t i64Times
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32CoarseFFTShiftMask = u32ShiftMask;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::attenuationADCChan0_callback(int64_t i64Timestamp_us, double dADCAttenuationChan0_dB)
@@ -347,8 +406,6 @@ void cRoachAcquistionControlDialog::attenuationADCChan0_callback(int64_t i64Time
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_dAttenuationADCChan0_dB = dADCAttenuationChan0_dB;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::attenuationADCChan1_callback(int64_t i64Timestamp_us, double dADCAttenuationChan1_dB)
@@ -356,16 +413,12 @@ void cRoachAcquistionControlDialog::attenuationADCChan1_callback(int64_t i64Time
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_dAttenuationADCChan1_dB = dADCAttenuationChan1_dB;
-
-    sigUpdateRoachGUIParameters();
 }
 void cRoachAcquistionControlDialog::noiseDiodeEnabled_callback(int64_t i64Timestamp_us, bool bNoiseDiodeEnabled)
 {
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_bNoiseDiodeEnabled = bNoiseDiodeEnabled;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::noiseDiodeDutyCycleEnabled_callback(int64_t i64Timestamp_us, bool bNoiseDiodeDutyCyleEnabled)
@@ -373,8 +426,6 @@ void cRoachAcquistionControlDialog::noiseDiodeDutyCycleEnabled_callback(int64_t 
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_bNoiseDiodeDutyCycleEnabled = bNoiseDiodeDutyCyleEnabled;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::noiseDiodeDutyCycleOnDuration_callback(int64_t i64Timestamp_us, uint32_t u32NAccums)
@@ -382,8 +433,6 @@ void cRoachAcquistionControlDialog::noiseDiodeDutyCycleOnDuration_callback(int64
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32NoiseDiodeDutyCycleOnDuration_nAccs = u32NAccums;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::noiseDiodeDutyCycleOffDuration_callback(int64_t i64Timestamp_us, uint32_t u32NAccums)
@@ -391,8 +440,6 @@ void cRoachAcquistionControlDialog::noiseDiodeDutyCycleOffDuration_callback(int6
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32NoiseDiodeDutyCycleOffDuration_nAccs = u32NAccums;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::overflowsRegs_callback(int64_t i64Timestamp_us, uint32_t u32OverflowRegs)
@@ -400,8 +447,6 @@ void cRoachAcquistionControlDialog::overflowsRegs_callback(int64_t i64Timestamp_
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32OverflowsRegs = u32OverflowRegs;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::eth10GbEUp_callback(int64_t i64Timestamp_us, bool bEth10GbEUp)
@@ -409,8 +454,6 @@ void cRoachAcquistionControlDialog::eth10GbEUp_callback(int64_t i64Timestamp_us,
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_bEth10GbEUp = bEth10GbEUp;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::ppsCount_callback(int64_t i64Timestamp_us, uint32_t u32PPSCount)
@@ -418,8 +461,6 @@ void cRoachAcquistionControlDialog::ppsCount_callback(int64_t i64Timestamp_us, u
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32PPSCount = u32PPSCount;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::clockFrequency_callback(int64_t i64Timestamp_us, uint32_t u32ClockFrequency_Hz)
@@ -427,8 +468,6 @@ void cRoachAcquistionControlDialog::clockFrequency_callback(int64_t i64Timestamp
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
     m_u32ClockFrequency_Hz = u32ClockFrequency_Hz;
-
-    sigUpdateRoachGUIParameters();
 }
 
 void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
@@ -439,25 +478,44 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
     //FYI connections to this slot is queued so it is save to lock the same mutex here as in the calling function.
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
+    if(m_bRoachKATCPConnected)
+    {
+        m_pUI->label_roachConnection->setText(QString("Connected"));
+    }
+    else
+    {
+        m_pUI->label_roachConnection->setText(QString("Not connected"));
+    }
+
+    if(m_bStationControllerKATCPConnected)
+    {
+        m_pUI->label_stationControllerConnection->setText(QString("Connected"));
+    }
+    else
+    {
+        m_pUI->label_stationControllerConnection->setText(QString("Not connected"));
+    }
+
+    if(m_bStokesEnabled)
+    {
+        m_pUI->label_stokesEnabled->setText(QString("True"));
+    }
+    else
+    {
+        m_pUI->label_stokesEnabled->setText(QString("False"));
+    }
+
     m_pUI->label_accumulationLength_nFrames->setText(QString("%1 frames").arg(m_u32AccumulationLength_nFrames));
 
-    double dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
-    if(m_u32SizeOfFineFFT_nSamp)
-    {
-        dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
-    }
-    dSingleAccumulationLength_ms *= 1000;
-
-    m_pUI->label_accumulationLength_ms->setText(QString("%1 ms").arg(m_u32AccumulationLength_nFrames * dSingleAccumulationLength_ms));
+    m_pUI->label_accumulationLength_ms->setText(QString("%1 ms").arg(m_u32AccumulationLength_nFrames * m_dSingleAccumulationLength_ms));
 
     if(m_u32SizeOfFineFFT_nSamp)
     {
         m_pUI->label_coarseChannelSelect_binNo->setText(QString("%1").arg(m_u32CoarseChannelSelect));
 
-        double dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
-        m_pUI->label_coarseChannelSelect_baseband->setText(QString("%1 MHz").arg(dCourseChannelSelectBaseband_MHz));
+        m_pUI->label_coarseChannelSelect_baseband->setText(QString("%1 MHz").arg(m_dCourseChannelSelectBaseband_MHz));
 
-        m_pUI->label_coarseChannelSelect_finalIF->setText(QString("%1 MHz").arg(m_dFrequencyFs_MHz - dCourseChannelSelectBaseband_MHz)); //Assume 2nd Nyquist zone
+        m_pUI->label_coarseChannelSelect_finalIF->setText(QString("%1 MHz").arg(m_dFrequencyFs_MHz - m_dCourseChannelSelectBaseband_MHz)); //Assume 2nd Nyquist zone
 
         //TODO: Not sure if this is right way around relative to RF.
         //Presumably, the first mixing stage is low side injection so no spectral flipping.
@@ -466,7 +524,7 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
         //The correct way around. Hence simply add the coarse channel frequnecy offset.
         if(m_dFrequencyRFChan0_MHz)
         {
-            m_pUI->label_coarseChannelSelect_RF0->setText(QString("%1").arg(m_dFrequencyRFChan0_MHz + dCourseChannelSelectBaseband_MHz));
+            m_pUI->label_coarseChannelSelect_RF0->setText(QString("%1").arg(m_dFrequencyRFChan0_MHz - (m_dFrequencyFs_MHz / 4) + m_dCourseChannelSelectBaseband_MHz));
         }
         else
         {
@@ -475,7 +533,7 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
 
         if(m_dFrequencyRFChan1_MHz)
         {
-            m_pUI->label_coarseChannelSelect_RF1->setText(QString("%1").arg(m_dFrequencyRFChan1_MHz + dCourseChannelSelectBaseband_MHz));
+            m_pUI->label_coarseChannelSelect_RF1->setText(QString("%1").arg(m_dFrequencyRFChan1_MHz - (m_dFrequencyFs_MHz / 4) + m_dCourseChannelSelectBaseband_MHz));
         }
         else
         {
@@ -483,10 +541,10 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
         }
 
         m_pUI->spinBox_coarseChannelSelect_binNo->setEnabled(true);
-        m_pUI->spinBox_coarseChannelFrequencyBaseband_MHz->setEnabled(true);
-        m_pUI->spinBox_coarseChannelFrequencyIF_MHz->setEnabled(true);
-        m_pUI->spinBox_coarseChannelFrequencyRF0_MHz->setEnabled(true);
-        m_pUI->spinBox_coarseChannelFrequencyRF1_MHz->setEnabled(true);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyBaseband_MHz->setEnabled(true);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyIF_MHz->setEnabled(true);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyRF0_MHz->setEnabled(true);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyRF1_MHz->setEnabled(true);
 
         m_pUI->pushButton_sendCoarseChannelSelect_binNo->setEnabled(true);
         m_pUI->pushButton_sendCoarseChannelSelect_baseband->setEnabled(true);
@@ -503,10 +561,10 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
         m_pUI->label_coarseChannelSelect_RF1->setText(QString("N/A"));
 
         m_pUI->spinBox_coarseChannelSelect_binNo->setEnabled(false);
-        m_pUI->spinBox_coarseChannelFrequencyBaseband_MHz->setEnabled(false);
-        m_pUI->spinBox_coarseChannelFrequencyIF_MHz->setEnabled(false);
-        m_pUI->spinBox_coarseChannelFrequencyRF0_MHz->setEnabled(false);
-        m_pUI->spinBox_coarseChannelFrequencyRF1_MHz->setEnabled(false);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyBaseband_MHz->setEnabled(false);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyIF_MHz->setEnabled(false);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyRF0_MHz->setEnabled(false);
+        m_pUI->doubleSpinBox_coarseChannelFrequencyRF1_MHz->setEnabled(false);
 
         m_pUI->pushButton_sendCoarseChannelSelect_binNo->setEnabled(false);
         m_pUI->pushButton_sendCoarseChannelSelect_baseband->setEnabled(false);
@@ -551,11 +609,11 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
 
     m_pUI->label_noiseDiodeDutyCycleOnDuration_accums->setText(QString("%1").arg(m_u32NoiseDiodeDutyCycleOnDuration_nAccs));
 
-    m_pUI->label_noiseDiodeDutyCycleOnDuration_ms->setText(QString("%1 ms").arg(m_u32NoiseDiodeDutyCycleOnDuration_nAccs * dSingleAccumulationLength_ms));
+    m_pUI->label_noiseDiodeDutyCycleOnDuration_ms->setText(QString("%1 ms").arg(m_u32NoiseDiodeDutyCycleOnDuration_nAccs * m_dSingleAccumulationLength_ms * m_u32AccumulationLength_nFrames));
 
     m_pUI->label_noiseDiodeDutyCycleOffDuration_accums->setText(QString("%1").arg(m_u32NoiseDiodeDutyCycleOffDuration_nAccs));
 
-    m_pUI->label_noiseDiodeDutyCycleOffDuration_ms->setText(QString("%1 ms").arg(m_u32NoiseDiodeDutyCycleOffDuration_nAccs * dSingleAccumulationLength_ms));
+    m_pUI->label_noiseDiodeDutyCycleOffDuration_ms->setText(QString("%1 ms").arg(m_u32NoiseDiodeDutyCycleOffDuration_nAccs * m_dSingleAccumulationLength_ms * m_u32AccumulationLength_nFrames));
 
     cSpectrometerOverflowRegisters oOverflowRegisters(m_u32OverflowsRegs);
 
@@ -648,9 +706,52 @@ void cRoachAcquistionControlDialog::slotUpdateRoachGUIParameters()
     checkParametersValid();
 }
 
+void cRoachAcquistionControlDialog::slotUpdateRoachGatewareList()
+{
+    boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+
+    QString qstrCurrent = m_pUI->comboBox_gatewareSelect->currentText();
+
+    m_pUI->comboBox_gatewareSelect->clear();
+
+    uint32_t u32Index = 0;
+    for(uint32_t ui = 0; ui < m_vstrRoachGatewareList.size(); ui++)
+    {
+        m_pUI->comboBox_gatewareSelect->addItem(QString(m_vstrRoachGatewareList[ui].c_str()));
+
+        //Try to find the previous selection to reselect and current.
+        if(!m_vstrRoachGatewareList[ui].compare(qstrCurrent.toStdString()))
+            u32Index = ui;
+    }
+
+    m_pUI->comboBox_gatewareSelect->setCurrentIndex(u32Index);
+}
+
 void cRoachAcquistionControlDialog::checkParametersValid()
 {
+    //Change the background of any label representing a value which is out of range to red.
+    //The the range is hardcode here for the most part. It migth be better to move towards a more
+    //programmatic solution in future based on KATCP's sensor's valid-range.
+
     cSpectrometerOverflowRegisters oOverflowRegisters(m_u32OverflowsRegs);
+
+    if(m_bRoachKATCPConnected)
+    {
+        m_pUI->label_roachConnection->setStyleSheet("QLabel { background-color : pallete(label)}");
+    }
+    else
+    {
+        m_pUI->label_roachConnection->setStyleSheet("QLabel { background-color : red}");
+    }
+
+    if(m_bStationControllerKATCPConnected)
+    {
+        m_pUI->label_stationControllerConnection->setStyleSheet("QLabel { background-color : pallete(label)}");
+    }
+    else
+    {
+        m_pUI->label_stationControllerConnection->setStyleSheet("QLabel { background-color : red}");
+    }
 
     if(!oOverflowRegisters.m_bADC0OverRange)
     {
@@ -856,4 +957,147 @@ bool cRoachAcquistionControlDialog::eventFilter(QObject *pObj, QEvent *pEvent)
 
     //Otherwise process the event as normal
     return cRoachAcquistionControlDialog::eventFilter(pObj, pEvent);
+}
+
+void cRoachAcquistionControlDialog::slotRefreshGatewareList()
+{
+    m_pKATCPClient->requestRoachGatewareList();
+}
+
+void cRoachAcquistionControlDialog::slotProgram()
+{
+    m_pKATCPClient->requestRoachProgram(m_pUI->comboBox_gatewareSelect->currentText().toStdString());
+}
+
+void cRoachAcquistionControlDialog::slotToggleStokes()
+{
+    boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+    m_pKATCPClient->requestRoachSetStokesEnabled(!m_bStokesEnabled);
+}
+
+void cRoachAcquistionControlDialog::slotSendAccumulationLength_nFrames()
+{
+    m_pKATCPClient->requestRoachSetAccumulationLength(m_pUI->spinBox_accumulationLength_nFrames->value());
+}
+
+void cRoachAcquistionControlDialog::slotSendAccumulationLength_ms()
+{
+    //Calculation number of accumulations in FFT frames (round up)
+    uint32_t u32NFrames;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        u32NFrames = boost::math::lround(m_pUI->doubleSpinBox_accumulationLength_ms->value() / m_dSingleAccumulationLength_ms + 0.5);
+    }
+
+    m_pKATCPClient->requestRoachSetAccumulationLength(u32NFrames);
+}
+
+void cRoachAcquistionControlDialog::slotSendCoarseChannelSelect_binNo()
+{
+    m_pKATCPClient->requestRoachSetCoarseChannelSelect(m_pUI->spinBox_coarseChannelSelect_binNo->value());
+}
+
+void cRoachAcquistionControlDialog::slotSendCoarseChannelSelect_baseband()
+{
+    uint32_t u32CoarseChannelSelect;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        u32CoarseChannelSelect = m_pUI->doubleSpinBox_coarseChannelFrequencyBaseband_MHz->value() * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+    }
+
+    m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
+}
+
+void cRoachAcquistionControlDialog::slotSendCoarseChannelSelect_finalIF()
+{
+    uint32_t u32CoarseChannelSelect;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        u32CoarseChannelSelect = (m_dFrequencyFs_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyIF_MHz->value()) * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+    }
+
+    m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
+}
+
+void cRoachAcquistionControlDialog::slotSendCoarseChannelSelect_RF0()
+{
+    uint32_t u32CoarseChannelSelect;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        double dFrequencyBaseband = m_dFrequencyRFChan0_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyRF0_MHz->value() + (m_dFrequencyFs_MHz / 4);
+        u32CoarseChannelSelect = dFrequencyBaseband * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+    }
+
+    m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
+}
+
+void cRoachAcquistionControlDialog::slotSendCoarseChannelSelect_RF1()
+{
+    uint32_t u32CoarseChannelSelect;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        double dFrequencyBaseband = m_dFrequencyRFChan1_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyRF1_MHz->value() + (m_dFrequencyFs_MHz / 4);
+        u32CoarseChannelSelect = dFrequencyBaseband * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+    }
+
+    m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
+}
+
+void cRoachAcquistionControlDialog::slotSendCoarseFFTShiftMask()
+{
+    m_pKATCPClient->requestRoachSetCoarseFFTShiftMask(m_pUI->spinBox_coarseFFTShiftMask->value());
+}
+
+void cRoachAcquistionControlDialog::slotSendADC0Attenuation()
+{
+    m_pKATCPClient->requestRoachSetADC0Attenuation(m_pUI->doubleSpinBox_ADCChan0Attenuation->value() * 2); //Assume KATADC 0.5 dB per step
+}
+
+void cRoachAcquistionControlDialog::slotSendADC1Attenuation()
+{
+    m_pKATCPClient->requestRoachSetADC1Attenuation(m_pUI->doubleSpinBox_ADCChan1Attenuation->value() * 2); //Assume KATADC 0.5 dB per step
+}
+
+void cRoachAcquistionControlDialog::slotToggleNoiseDiodeEnabled()
+{
+    boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+    m_pKATCPClient->requestRoachSetNoiseDiodeEnabled(!m_bNoiseDiodeEnabled);
+}
+
+void cRoachAcquistionControlDialog::slotToggleNoiseDiodeDutyCycleEnabled()
+{
+    boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+    m_pKATCPClient->requestRoachSetNoiseDiodeDutyCycleEnabled(!m_bNoiseDiodeDutyCycleEnabled);
+}
+
+void cRoachAcquistionControlDialog::slotSendNoiseDiodeDutyCycleOnDuration_nAccums()
+{
+    m_pKATCPClient->requestRoachSetNoiseDiodeDutyCycleOnDuration(m_pUI->spinBox_noiseDiodeDutyCycleOnDuration_accums->value());
+}
+
+void cRoachAcquistionControlDialog::slotSendNoiseDiodeDutyCycleOnDuration_ms()
+{
+    uint32_t u32NAccums;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        u32NAccums = boost::math::lround(m_pUI->spinBox_noiseDiodeDutyCycleOnDuration_ms->value() / (m_dSingleAccumulationLength_ms * m_u32AccumulationLength_nFrames) + 0.5);
+    }
+
+    m_pKATCPClient->requestRoachSetNoiseDiodeDutyCycleOnDuration(u32NAccums);
+}
+
+void cRoachAcquistionControlDialog::slotSendNoiseDiodeDutyCycleOffDuration_nAccums()
+{
+    m_pKATCPClient->requestRoachSetNoiseDiodeDutyCycleOffDuration(m_pUI->spinBox_noiseDiodeDutyCycleOffDuration_accums->value());
+}
+
+void cRoachAcquistionControlDialog::slotSendNoiseDiodeDutyCycleOffDuration_ms()
+{
+    uint32_t u32NAccums;
+    {
+        boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
+        u32NAccums = boost::math::lround(m_pUI->spinBox_noiseDiodeDutyCycleOffDuration_ms->value() / (m_dSingleAccumulationLength_ms * m_u32AccumulationLength_nFrames) + 0.5);
+    }
+
+    m_pKATCPClient->requestRoachSetNoiseDiodeDutyCycleOffDuration(u32NAccums);
 }

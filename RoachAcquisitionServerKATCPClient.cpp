@@ -267,12 +267,12 @@ void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string
     {
     }
 
-    cout << "cRoachAcquisitionServerKATCPClient::processKATCPMessage(): Ignoring KATCP message: ";
-    for(uint32_t ui = 0; ui < vstrTokens.size(); ui++ )
-    {
-        cout << vstrTokens[ui] << " ";
-    }
-    cout << endl;
+//    cout << "cRoachAcquisitionServerKATCPClient::processKATCPMessage(): Ignoring KATCP message: ";
+//    for(uint32_t ui = 0; ui < vstrTokens.size(); ui++ )
+//    {
+//        cout << vstrTokens[ui] << " ";
+//    }
+//    cout << endl;
 }
 
 void cRoachAcquisitionServerKATCPClient::sendStationControllerKATCPConnected(bool bConnected)

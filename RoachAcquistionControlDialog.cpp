@@ -15,9 +15,10 @@
 
 using namespace std;
 
-cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, QWidget *pParent) :
+cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, cPlotsWidget *pPlotsWidget, QWidget *pParent) :
     QDialog(pParent),
     m_pUI(new Ui::cRoachAcquistionControlDialog),
+    m_pPlotsWidget(pPlotsWidget),
     m_eTimeSpec(Qt::LocalTime),
     m_bIsRecording(false),
     m_bStationControllerKATCPConnected(false),
@@ -53,9 +54,10 @@ cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(const QString &qstr
     connect(qstrHostname, u16Port);
 }
 
-cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(QWidget *pParent) :
+cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(cPlotsWidget *pPlotsWidget, QWidget *pParent) :
     QDialog(pParent),
     m_pUI(new Ui::cRoachAcquistionControlDialog),
+    m_pPlotsWidget(pPlotsWidget),
     m_eTimeSpec(Qt::LocalTime),
     m_bIsRecording(false)
 {
@@ -66,13 +68,21 @@ cRoachAcquistionControlDialog::cRoachAcquistionControlDialog(QWidget *pParent) :
 
 cRoachAcquistionControlDialog::~cRoachAcquistionControlDialog()
 {
+    if(m_pKATCPClient.get())
+    {
+        m_pKATCPClient->deregisterCallbackHandler(this);
+        m_pKATCPClient->deregisterCallbackHandler(m_pPlotsWidget);
+    }
+
     delete m_pUI;
 }
 
 void cRoachAcquistionControlDialog::connect(const QString &qstrHostname, uint16_t u16Port)
 {
     m_pKATCPClient = boost::make_shared<cRoachAcquisitionServerKATCPClient>();
+
     m_pKATCPClient->registerCallbackHandler(this);
+    m_pKATCPClient->registerCallbackHandler(m_pPlotsWidget);
 
     m_pKATCPClient->connect(qstrHostname.toStdString(), u16Port);
 
@@ -238,7 +248,7 @@ void cRoachAcquistionControlDialog::slotStartStopRecordingClicked()
     }
 }
 
-void cRoachAcquistionControlDialog::connected_callback(bool bConnected)
+void cRoachAcquistionControlDialog::connected_callback(bool bConnected, const std::string &strHostAddress, uint16_t u16Port, const std::string &strDescription)
 {
     sigKATCPSocketConnected(bConnected);
     cout << "cRoachAcquistionControlDialog::connected_callback() Got connected = " << bConnected << " callback" << endl;

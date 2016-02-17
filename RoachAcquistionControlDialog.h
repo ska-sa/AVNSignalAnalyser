@@ -14,6 +14,7 @@
 
 //Local includes
 #include "RoachAcquisitionServerKATCPClient.h"
+#include "PlotsWidget.h"
 
 namespace Ui {
 class cRoachAcquistionControlDialog;
@@ -24,14 +25,15 @@ class cRoachAcquistionControlDialog : public QDialog, public cRoachAcquisitionSe
     Q_OBJECT
 
 public:
-    explicit cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, QWidget *pParent = 0);
-    explicit cRoachAcquistionControlDialog(QWidget *pParent = 0);
+    explicit cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, cPlotsWidget *pPlotsWidget, QWidget *pParent = 0);
+    explicit cRoachAcquistionControlDialog(cPlotsWidget *pPlotsWidget, QWidget *pParent = 0);
     ~cRoachAcquistionControlDialog();
 
     void                                                    connect(const QString &qstrHostname, uint16_t u16Port);
 
 private:
     Ui::cRoachAcquistionControlDialog                       *m_pUI;
+    cPlotsWidget                                            *m_pPlotsWidget;
 
     QTimer                                                  m_oSecondTimer;
     QTimer                                                  m_oTwoSecondTimer;
@@ -79,7 +81,7 @@ private:
     void                                                    connectSignalToSlots();
 
     //Implemented callbacks from cRoachAcquisitionServerKATCPClient::cCallbackInterface
-    void                                                    connected_callback(bool bConnected);
+    void                                                    connected_callback(bool bConnected, const std::string &strHostAddress, uint16_t u16Port, const std::string &strDescription);
     void                                                    recordingStarted_callback();
     void                                                    recordingStopped_callback();
     void                                                    recordingInfoUpdate_callback(const std::string &strFilename,

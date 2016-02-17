@@ -25,9 +25,13 @@ cPlotsWidget::cPlotsWidget(QWidget *pParent) :
     m_pBandPowerPlotWidget(new cBandPowerQwtLinePlot(this)),
     m_bPowerEnabled(true),
     m_bStokesPhaseEnabled(true),
-    m_bBandPowerEnabled(true)
+    m_bBandPowerEnabled(true),
+    m_u16PlotType(AVN::Spectrometer::UNDEFINED),
+    m_u32AccumulationLength_nFrames(1)
 {
     m_pUI->setupUi(this);
+
+    updatePlotType(AVN::Spectrometer::UNDEFINED); //Launch in a safe state (Unknown plot type rejects sample data). This will change when a known stream type is identified.
 
     m_pUI->horizontalLayout_powers->insertWidget(0, m_pPowerPlotWidget);
     m_pUI->horizontalLayout_stokesPhase->insertWidget(0, m_pStokesPhasePlotWidget);
@@ -241,6 +245,8 @@ void cPlotsWidget::getDataThreadFunction()
             case AVN::Spectrometer::WB_SPECTROMETER_LRPP:
             case AVN::Spectrometer::NB_SPECTROMETER_LRPP:
             {
+                QReadLocker oLock(&m_oMutex);
+
                 for(uint32_t ui = 0; ui < (uint32_t)qvvfPlotData[0].size(); ui++)
                 {
                     //Phase calculations: Store relative phase between ADC0 and ADC1 in Chan2 in progressive frequency bins
@@ -252,12 +258,11 @@ void cPlotsWidget::getDataThreadFunction()
                     //So we need to rescale back to radians:
 
                     *fpChan2 = ( *fpChan2 / 32768) - ( *fpChan3  / 32768);
+                    *fpChan2 /= m_u32AccumulationLength_nFrames; //Divide out accumulation length
 
                     fpChan2++;
                     fpChan3++;
                 }
-
-                QReadLocker oLock(&m_oMutex);
 
                 if(m_bPowerEnabled)
                 {
@@ -603,6 +608,15 @@ void cPlotsWidget::socketDisconnected_callback()
     //This will be called by the socket reading thread. so it needs to be decoupled with a queued connection
     //The slotDisconnect asked the socket reading thread to join so this queued connection prevents the socket
     //reading thread from joining itself.
+}
+
+void cPlotsWidget::accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames)
+{
+    //Update accumulation length
+
+    QWriteLocker oLock(&m_oMutex);
+
+    m_u32AccumulationLength_nFrames = u32NFrames;
 }
 
 void cPlotsWidget::slotEnablePowerPlot(bool bEnable)

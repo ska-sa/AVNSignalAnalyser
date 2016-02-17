@@ -77,7 +77,7 @@ void cMainWindow::slotKATCPEnabled(bool bEnabled)
     {
         cout << "cMainWindow::slotKATCPEnabled() Starting KATCP client" << endl;
 
-        m_pAquisitionDialog.reset( new cRoachAcquistionControlDialog() );
+        m_pAquisitionDialog.reset( new cRoachAcquistionControlDialog(m_pPlotsWidget) );
         m_pAquisitionDialog->setModal(false); //Don't block the rest of the GUI and don't be always-on-top
         m_pAquisitionDialog->show();
 

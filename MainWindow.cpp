@@ -18,6 +18,7 @@ cMainWindow::cMainWindow(QWidget *pParent) :
     m_pPlotsWidget(new cPlotsWidget(this))
 {
     m_pUI->setupUi(this);
+    qApp->installEventFilter( this );
 
     m_pUI->horizontalLayout_MainWindowTop->insertSpacerItem(1, new QSpacerItem(20, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed));
     m_pUI->horizontalLayout_MainWindowTop->insertWidget(2, m_pNetworkGroupBox);
@@ -113,4 +114,16 @@ void cMainWindow::slotOpenAboutDialog()
     oAboutDialog.layout()->setSizeConstraint( QLayout::SetFixedSize );
     oAboutDialog.show();
     oAboutDialog.exec();
+}
+
+bool cMainWindow::eventFilter(QObject *pObj, QEvent *pEvent)
+{
+    //Intercept close event and close the KATCP dialog
+//    if(pEvent->type() == QEvent::Close)
+//    {
+//        slotKATCPEnabled(false);
+//    }
+
+    //Otherwise process the event as normal
+    return QMainWindow::eventFilter(pObj, pEvent);
 }

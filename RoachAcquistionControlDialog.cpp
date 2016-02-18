@@ -966,7 +966,7 @@ bool cRoachAcquistionControlDialog::eventFilter(QObject *pObj, QEvent *pEvent)
     }
 
     //Otherwise process the event as normal
-    return cRoachAcquistionControlDialog::eventFilter(pObj, pEvent);
+    return QDialog::eventFilter(pObj, pEvent);
 }
 
 void cRoachAcquistionControlDialog::slotRefreshGatewareList()

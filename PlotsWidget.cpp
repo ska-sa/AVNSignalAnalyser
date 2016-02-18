@@ -554,8 +554,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
     m_u16PlotType = u16PlotType;
 
     //Strobe auto scale:
-    m_pPowerPlotWidget->strobeAutoscale();
-    m_pStokesPhasePlotWidget->strobeAutoscale();
+    m_pPowerPlotWidget->strobeAutoscale(100);
+    m_pStokesPhasePlotWidget->strobeAutoscale(100);
 
     m_pBandPowerPlotWidget->resetHistory();
     m_pBandPowerPlotWidget->strobeAutoscale(5000);

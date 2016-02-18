@@ -33,6 +33,8 @@ private:
 
     void                                            connectSignalsToSlots();
 
+    bool                                            eventFilter(QObject *pObj, QEvent *pEvent); //Overload to hide instead of close on clicking close
+
 private slots:
     void                                            slotSetConnectedOrBound(bool bIsConnectedOrBound);
     void                                            slotKATCPEnabled(bool bEnabled);

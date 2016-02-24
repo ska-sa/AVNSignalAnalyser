@@ -30,249 +30,224 @@ void cRoachAcquisitionServerKATCPClient::onConnected()
 
 void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string> &vstrTokens)
 {
-//    cout << "Got KATCP message: ";
-//    for(uint32_t ui = 0; ui < vstrTokens.size(); ui++ )
-//    {
-//        cout << vstrTokens[ui] << " ";
-//    }
-//    cout << endl;
+    //    cout << "Got KATCP message: ";
+    //    for(uint32_t ui = 0; ui < vstrTokens.size(); ui++ )
+    //    {
+    //        cout << vstrTokens[ui] << " ";
+    //    }
+    //    cout << endl;
 
-    try
+    if( !vstrTokens[0].compare("#recordingStopped") )
     {
-        if( !vstrTokens[0].compare("#recordingStopped") )
-        {
-            sendRecordingStopped();
+        sendRecordingStopped();
+        return;
+    }
+
+
+
+    if(!vstrTokens[0].compare("#recordingStarted"))
+    {
+        cout <<"Sending recording started" << endl;
+        sendRecordingStarted();
+        return;
+    }
+
+
+    if(!vstrTokens[0].compare("#recordingInfo"))
+    {
+        if(vstrTokens.size() < 8)
             return;
-        }
+
+        int64_t i64StartTime_us             = strtoll(vstrTokens[2].c_str(), NULL, 10);
+        int64_t i64EllapsedTime_us          = strtoll(vstrTokens[3].c_str(), NULL, 10);
+        int64_t i64StopTime_us              = strtoll(vstrTokens[4].c_str(), NULL, 10);
+        int64_t i64TimeLeft_us              = strtoll(vstrTokens[5].c_str(), NULL, 10);
+        uint64_t u64CurrentFileSize_B       = strtoull(vstrTokens[6].c_str(), NULL, 10);
+        uint64_t u64DiskSpaceRemaining_B    = strtoull(vstrTokens[7].c_str(), NULL, 10);
+
+        sendRecordingInfoUpdate(vstrTokens[1], i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
+
+        return;
     }
-    catch(out_of_range &oError)
+
+
+    if(!vstrTokens[0].compare("#roachGatewareList"))
     {
+        vector<string> vstrGatewareList(vstrTokens);
+        vstrGatewareList.erase(vstrGatewareList.begin());
+
+        sendRoachGatewareList(vstrGatewareList);
+
+        return;
     }
 
-
-    try
-    {
-        if(!vstrTokens[0].compare("#recordingStarted"))
-        {
-            cout <<"Sending recording started" << endl;
-            sendRecordingStarted();
-            return;
-        }
-    }
-    catch(out_of_range &oError)
-    {
-    }
-
-    try
-    {
-        if(!vstrTokens[0].compare("#recordingInfo"))
-        {
-            if(vstrTokens.size() < 8)
-                return;
-
-            int64_t i64StartTime_us             = strtoll(vstrTokens[2].c_str(), NULL, 10);
-            int64_t i64EllapsedTime_us          = strtoll(vstrTokens[3].c_str(), NULL, 10);
-            int64_t i64StopTime_us              = strtoll(vstrTokens[4].c_str(), NULL, 10);
-            int64_t i64TimeLeft_us              = strtoll(vstrTokens[5].c_str(), NULL, 10);
-            uint64_t u64CurrentFileSize_B       = strtoull(vstrTokens[6].c_str(), NULL, 10);
-            uint64_t u64DiskSpaceRemaining_B    = strtoull(vstrTokens[7].c_str(), NULL, 10);
-
-            sendRecordingInfoUpdate(vstrTokens[1], i64StartTime_us, i64EllapsedTime_us, i64StopTime_us, i64TimeLeft_us, u64CurrentFileSize_B, u64DiskSpaceRemaining_B);
-
-            return;
-        }
-    }
-    catch(out_of_range &oError)
-    {
-    }
-
-    try
-    {
-        if(!vstrTokens[0].compare("#roachGatewareList"))
-        {
-            vector<string> vstrGatewareList(vstrTokens);
-            vstrGatewareList.erase(vstrGatewareList.begin());
-
-            sendRoachGatewareList(vstrGatewareList);
-
-            return;
-        }
-    }
-    catch(out_of_range &oError)
-    {
-    }
 
     //Sensors
-    try
+
+    if(!vstrTokens[0].compare("#sensor-status"))
     {
-        if(!vstrTokens[0].compare("#sensor-status"))
+        if(vstrTokens.size() < 6)
+            return;
+
+        int64_t i64Timestamp_us = strtoll(vstrTokens[1].c_str(), NULL, 10);
+
+        if(!vstrTokens[3].compare("stationControllerConnected"))
         {
-            if(vstrTokens.size() < 6)
-                return;
+            sendStationControllerKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[3].c_str(), NULL, 10)) );
+            return;
+        }
 
-            int64_t i64Timestamp_us = strtoll(vstrTokens[1].c_str(), NULL, 10);
+        if(!vstrTokens[3].compare("actualAntennaAz"))
+        {
+            sendActualAntennaAz(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("stationControllerConnected"))
-            {
-                sendStationControllerKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[3].c_str(), NULL, 10)) );
-                return;
-            }
+        if(!vstrTokens[3].compare("actualAntennaEl"))
+        {
+            sendActualAntennaEl(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("actualAntennaAz"))
-            {
-                sendActualAntennaAz(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
-                return;
-            }
+        if(!vstrTokens[3].compare("actualSourceOffsetAz"))
+        {
+            sendActualSourceOffsetAz(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("actualAntennaEl"))
-            {
-                sendActualAntennaEl(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
-                return;
-            }
+        if(!vstrTokens[3].compare("actualSourceOffsetEl"))
+        {
+            sendActualSourceOffsetEl(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("actualSourceOffsetAz"))
-            {
-                sendActualSourceOffsetAz(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
-                return;
-            }
+        if(!vstrTokens[3].compare("frequencyRFChan0"))
+        {
+            sendFrequencyRFChan0(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("actualSourceOffsetEl"))
-            {
-                sendActualSourceOffsetEl(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
-                return;
-            }
+        if(!vstrTokens[3].compare("frequencyRFChan1"))
+        {
+            sendFrequencyRFChan1(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("frequencyRFChan0"))
-            {
-                sendFrequencyRFChan0(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
-                return;
-            }
+        if(!vstrTokens[3].compare("roachConnected"))
+        {
+            sendRoachKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("frequencyRFChan1"))
-            {
-                sendFrequencyRFChan1(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL) );
-                return;
-            }
+        if(!vstrTokens[3].compare("roachStokesEnabled"))
+        {
+            sendStokesEnabled( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachConnected"))
-            {
-                sendRoachKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
-                return;
-            }
+        if(!vstrTokens[3].compare("roachAccumulationLength"))
+        {
+            sendAccumulationLength(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachStokesEnabled"))
-            {
-                sendStokesEnabled( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
-                return;
-            }
+        if(!vstrTokens[3].compare("roachCoarseChannelSelect"))
+        {
+            sendCoarseChannelSelect(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachAccumulationLength"))
-            {
-                sendAccumulationLength(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachFrequencyFs"))
+        {
+            sendFrequencyFs(strtod(vstrTokens[5].c_str(), NULL));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachCoarseChannelSelect"))
-            {
-                sendCoarseChannelSelect(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachSizeOfCoarseFFT"))
+        {
+            sendSizeOfCoarseFFT(strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachFrequencyFs"))
-            {
-                sendFrequencyFs(strtod(vstrTokens[5].c_str(), NULL));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachSizeOfFineFFT"))
+        {
+            sendSizeOfFineFFT(strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachSizeOfCoarseFFT"))
-            {
-                sendSizeOfCoarseFFT(strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachCoarseFFTShiftMask"))
+        {
+            sendCoarseFFTShiftMask(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachSizeOfFineFFT"))
-            {
-                sendSizeOfFineFFT(strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachAttenuationADCChan0"))
+        {
+            sendAttenuationADCChan0(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachCoarseFFTShiftMask"))
-            {
-                sendCoarseFFTShiftMask(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachAttenuationADCChan1"))
+        {
+            sendAttenuationADCChan1(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachAttenuationADCChan0"))
-            {
-                sendAttenuationADCChan0(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachNoiseDiodeEnabled"))
+        {
+            sendNoiseDiodeEnabled(i64Timestamp_us, (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachAttenuationADCChan1"))
-            {
-                sendAttenuationADCChan1(i64Timestamp_us, strtod(vstrTokens[5].c_str(), NULL));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachNoiseDiodeDutyCycleEnabled"))
+        {
+            sendNoiseDiodeDutyCycleEnabled(i64Timestamp_us, (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachNoiseDiodeEnabled"))
-            {
-                sendNoiseDiodeEnabled(i64Timestamp_us, (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachNoiseDiodeDutyCycleOnDuration"))
+        {
+            sendNoiseDiodeDutyCycleOnDuration(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachNoiseDiodeDutyCycleEnabled"))
-            {
-                sendNoiseDiodeDutyCycleEnabled(i64Timestamp_us, (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachNoiseDiodeDutyCycleOffDuration"))
+        {
+            sendNoiseDiodeDutyCycleOffDuration(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachNoiseDiodeDutyCycleOnDuration"))
-            {
-                sendNoiseDiodeDutyCycleOnDuration(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachOverflowRegs"))
+        {
+            sendOverflowsRegs(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachNoiseDiodeDutyCycleOffDuration"))
-            {
-                sendNoiseDiodeDutyCycleOffDuration(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachEth10GbEUp"))
+        {
+            sendEth10GbEUp(i64Timestamp_us, (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachOverflowRegs"))
-            {
-                sendOverflowsRegs(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachPPSCount"))
+        {
+            sendPPSCount(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
+        }
 
-            if(!vstrTokens[3].compare("roachEth10GbEUp"))
-            {
-                sendEth10GbEUp(i64Timestamp_us, (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)));
-                return;
-            }
-
-            if(!vstrTokens[3].compare("roachPPSCount"))
-            {
-                sendPPSCount(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
-
-            if(!vstrTokens[3].compare("roachClockFrequency"))
-            {
-                sendClockFrequency(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
-                return;
-            }
+        if(!vstrTokens[3].compare("roachClockFrequency"))
+        {
+            sendClockFrequency(i64Timestamp_us, strtol(vstrTokens[5].c_str(), NULL, 10));
+            return;
         }
     }
-    catch(out_of_range &oError)
-    {
-    }
 
-//    cout << "cRoachAcquisitionServerKATCPClient::processKATCPMessage(): Ignoring KATCP message: ";
-//    for(uint32_t ui = 0; ui < vstrTokens.size(); ui++ )
-//    {
-//        cout << vstrTokens[ui] << " ";
-//    }
-//    cout << endl;
+    //    cout << "cRoachAcquisitionServerKATCPClient::processKATCPMessage(): Ignoring KATCP message: ";
+    //    for(uint32_t ui = 0; ui < vstrTokens.size(); ui++ )
+    //    {
+    //        cout << vstrTokens[ui] << " ";
+    //    }
+    //    cout << endl;
 }
 
 void cRoachAcquisitionServerKATCPClient::sendStationControllerKATCPConnected(bool bConnected)

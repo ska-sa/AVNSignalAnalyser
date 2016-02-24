@@ -93,7 +93,7 @@ void cRoachAcquisitionServerKATCPClient::processKATCPMessage(const vector<string
 
         if(!vstrTokens[3].compare("stationControllerConnected"))
         {
-            sendStationControllerKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[3].c_str(), NULL, 10)) );
+            sendStationControllerKATCPConnected( (bool)(0x00000001 & strtol(vstrTokens[5].c_str(), NULL, 10)) );
             return;
         }
 

@@ -119,10 +119,10 @@ void cMainWindow::slotOpenAboutDialog()
 bool cMainWindow::eventFilter(QObject *pObj, QEvent *pEvent)
 {
     //Intercept close event and close the KATCP dialog
-//    if(pEvent->type() == QEvent::Close)
-//    {
-//        slotKATCPEnabled(false);
-//    }
+    if(pEvent->type() == QEvent::Close)
+    {
+        slotKATCPEnabled(false);
+    }
 
     //Otherwise process the event as normal
     return QMainWindow::eventFilter(pObj, pEvent);

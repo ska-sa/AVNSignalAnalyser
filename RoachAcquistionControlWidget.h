@@ -1,5 +1,5 @@
-#ifndef ROACH_ACQUISITION_CONTROL_DIALOG_H
-#define ROACH_ACQUISITION_CONTROL_DIALOG_H
+#ifndef ROACH_ACQUISITION_CONTROL_WIDGET_H
+#define ROACH_ACQUISITION_CONTROL_WIDGET_H
 
 //System includes
 
@@ -17,22 +17,21 @@
 #include "PlotsWidget.h"
 
 namespace Ui {
-class cRoachAcquistionControlDialog;
+class cRoachAcquistionControlWidget;
 }
 
-class cRoachAcquistionControlDialog : public QDialog, public cRoachAcquisitionServerKATCPClient::cCallbackInterface
+class cRoachAcquistionControlWidget : public QDialog, public cRoachAcquisitionServerKATCPClient::cCallbackInterface
 {
     Q_OBJECT
 
 public:
-    explicit cRoachAcquistionControlDialog(const QString &qstrHostname, uint16_t u16Port, cPlotsWidget *pPlotsWidget, QWidget *pParent = 0);
-    explicit cRoachAcquistionControlDialog(cPlotsWidget *pPlotsWidget, QWidget *pParent = 0);
-    ~cRoachAcquistionControlDialog();
+    explicit cRoachAcquistionControlWidget(cPlotsWidget *pPlotsWidget, QWidget *pParent = 0);
+    ~cRoachAcquistionControlWidget();
 
-    void                                                    connect(const QString &qstrHostname, uint16_t u16Port);
+    bool connect(const QString &qstrHostname, uint16_t u16Port);
 
 private:
-    Ui::cRoachAcquistionControlDialog                       *m_pUI;
+    Ui::cRoachAcquistionControlWidget                       *m_pUI;
     cPlotsWidget                                            *m_pPlotsWidget;
 
     QTimer                                                  m_oSecondTimer;
@@ -118,7 +117,7 @@ private:
     void                                                    ppsCount_callback(int64_t i64Timestamp_us, uint32_t u32PPSCount);
     void                                                    clockFrequency_callback(int64_t i64Timestamp_us, uint32_t u32ClockFrequency_Hz);
 
-    bool                                                    eventFilter(QObject *pObj, QEvent *pEvent); //Overload to hide instead of close on clicking close
+    void                                                    closeEvent(QCloseEvent *pEvent); //Overload to hide instead of close on clicking close
 
     void                                                    checkParametersValid();
 
@@ -163,7 +162,6 @@ private slots:
 
 
 signals:
-    void                                                    sigKATCPSocketConnected(bool bConnected);
     void                                                    sigRecordingInfoUpdate(const QString &qstrFilename,
                                                                                    int64_t i64StartTime_us, int64_t i64EllapsedTime_us,
                                                                                    int64_t i64StopTime_us, int64_t i64TimeLeft_us,
@@ -175,4 +173,4 @@ signals:
 
 };
 
-#endif // ROACH_ACQUISITION_CONTROL_DIALOG_H
+#endif // ROACH_ACQUISITION_CONTROL_WIDGET_H

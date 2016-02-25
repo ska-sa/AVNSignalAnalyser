@@ -11,7 +11,7 @@
 //Local includes
 #include "NetworkConnectionWidget.h"
 #include "PlotsWidget.h"
-#include "RoachAcquistionControlDialog.h"
+#include "RoachAcquistionControlWidget.h"
 
 namespace Ui {
 class cMainWindow;
@@ -29,11 +29,11 @@ private:
     Ui::cMainWindow                                 *m_pUI;
     cNetworkConnectionWidget                        *m_pNetworkGroupBox;
     cPlotsWidget                                    *m_pPlotsWidget;
-    QScopedPointer<cRoachAcquistionControlDialog>   m_pAquisitionDialog;
+    QScopedPointer<cRoachAcquistionControlWidget>   m_pAquisitionWidget;
 
     void                                            connectSignalsToSlots();
 
-    bool                                            eventFilter(QObject *pObj, QEvent *pEvent); //Overload to hide instead of close on clicking close
+    void                                            closeEvent(QCloseEvent *pEvent); //Overload to close RoachAcquisitionControlDialog if it is open before closing main window
 
 private slots:
     void                                            slotSetConnectedOrBound(bool bIsConnectedOrBound);

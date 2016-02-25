@@ -40,10 +40,10 @@ SOURCES +=\
     AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.cpp \
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.cpp \
-    RoachAcquistionControlDialog.cpp \
     AVNAppLibs/KATCP/KATCPClientBase.cpp \
     RoachAcquisitionServerKATCPClient.cpp \
-    AVNDataTypes/SpectrometerDataStream/cSpectrometerOverflowRegisters.cpp
+    AVNDataTypes/SpectrometerDataStream/cSpectrometerOverflowRegisters.cpp \
+    RoachAcquistionControlWidget.cpp
 
 HEADERS  += MainWindow.h \
     AVNUtilLibs/DataStructures/ThreadSafeCircularBuffer/ThreadSafeCircularBuffer.h \
@@ -71,10 +71,10 @@ HEADERS  += MainWindow.h \
     AVNGUILibs/QwtPlotting/QwtPlotDistancePicker.h \
     AVNGUILibs/QwtPlotting/QwtPlotPositionPicker.h \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.h \
-    RoachAcquistionControlDialog.h \
     AVNAppLibs/KATCP/KATCPClientBase.h \
     RoachAcquisitionServerKATCPClient.h \
-    AVNDataTypes/SpectrometerDataStream/cSpectrometerOverflowRegisters.h
+    AVNDataTypes/SpectrometerDataStream/cSpectrometerOverflowRegisters.h \
+    RoachAcquistionControlWidget.h
 
 
 FORMS    += MainWindow.ui \
@@ -82,7 +82,7 @@ FORMS    += MainWindow.ui \
     NetworkConnectionWidget.ui \
     AboutDialog.ui \
     AVNGUILibs/QwtPlotting/QwtPlotWidgetBase.ui \
-    RoachAcquistionControlDialog.ui
+    RoachAcquistionControlWidget.ui
 
 RESOURCES += \
     Images.qrc

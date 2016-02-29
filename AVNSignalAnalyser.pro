@@ -130,13 +130,13 @@ macx{
     DEFINES    += QT_DLL QWT_DLL
 
     #Qwt
-    LIBS += -lqwt6
-    INCLUDEPATH += /usr/include/qwt6
+    LIBS += -lqwt
+    INCLUDEPATH += /opt/local/libexec/qt4/include/qwt
 
 
     #Boost seems to be ubiquitous across distros
-    INCLUDEPATH += /usr/include/
-    LIBS += -lboost_system -lboost_thread -lboost_chrono -lboost_date_time
+    INCLUDEPATH += /opt/local/include/
+    LIBS += -L/opt/local/lib -lboost_system-mt -lboost_thread-mt -lboost_chrono-mt -lboost_date_time-mt
 }
 
 win32{

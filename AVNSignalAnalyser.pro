@@ -87,7 +87,7 @@ FORMS    += MainWindow.ui \
 RESOURCES += \
     Images.qrc
 
-unix{
+unix:!macx{
     message(Detected Linux / Unix OS.)
 
     #Use Qt and Qwt from shared libs (For LGPL compliance)
@@ -120,6 +120,22 @@ unix{
     }
 
     #Boost seems to be ubiquitous across distros
+    LIBS += -lboost_system -lboost_thread -lboost_chrono -lboost_date_time
+}
+
+macx{
+    message(Detected Mac OS.)
+
+    #Use Qt and Qwt from shared libs (For LGPL compliance)
+    DEFINES    += QT_DLL QWT_DLL
+
+    #Qwt
+    LIBS += -lqwt6
+    INCLUDEPATH += /usr/include/qwt6
+
+
+    #Boost seems to be ubiquitous across distros
+    INCLUDEPATH += /usr/include/
     LIBS += -lboost_system -lboost_thread -lboost_chrono -lboost_date_time
 }
 

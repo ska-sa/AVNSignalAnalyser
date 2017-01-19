@@ -352,7 +352,7 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - L, R, Q, U"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
-        m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
+        m_pBandPowerPlotWidget->setYUnit(QString("counts/MHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
         m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
@@ -368,7 +368,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, QString("MHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
-        m_pBandPowerPlotWidget->enableLogConversion(true);
+        //m_pBandPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(false);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPhasePlotWidget->enableRejectData(false);
@@ -417,7 +418,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->setSelectableBand(0.0, 400.0, QString("MHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
-        m_pBandPowerPlotWidget->enableLogConversion(true);
+        //m_pBandPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(false);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPhasePlotWidget->enableRejectData(false);
@@ -470,7 +472,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, QString("kHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
-        m_pBandPowerPlotWidget->enableLogConversion(true);
+        //m_pBandPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(false);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPhasePlotWidget->enableRejectData(false);
@@ -519,7 +522,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
         m_pBandPowerPlotWidget->setSelectableBand(-781.25, 781.25, QString("kHz"));
 
         m_pPowerPlotWidget->enableLogConversion(true);
-        m_pBandPowerPlotWidget->enableLogConversion(true);
+        //m_pBandPowerPlotWidget->enableLogConversion(true);
+        m_pBandPowerPlotWidget->enableLogConversion(false);
 
         m_pPowerPlotWidget->enableRejectData(false);
         m_pStokesPhasePlotWidget->enableRejectData(false);

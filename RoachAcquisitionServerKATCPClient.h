@@ -38,7 +38,7 @@ public:
         virtual void                                    stokesEnabled_callback(bool bEnabled) = 0;
         virtual void                                    accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames) = 0;
         virtual void                                    coarseChannelSelect_callback(int64_t i64Timestamp_us, uint32_t u32ChannelNo) = 0;
-        virtual void                                    frequencyFs_callback(double dFrequencyFs_MHz) = 0;
+        virtual void                                    frequencyFs_callback(double dFrequencyFs_Hz) = 0;
         virtual void                                    sizeOfCoarseFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp) = 0;
         virtual void                                    sizeOfFineFFT_callback(uint32_t u32FineFFTSize_nSamp) = 0;
         virtual void                                    coarseFFTShiftMask_callback(int64_t i64Timestamp_us, uint32_t u32ShiftMask) = 0;
@@ -107,7 +107,7 @@ private:
     void                                                sendStokesEnabled(bool bEnabled);
     void                                                sendAccumulationLength(int64_t i64Timestamp_us, uint32_t u32NFrames);
     void                                                sendCoarseChannelSelect(int64_t i64Timestamp_us, uint32_t u32ChannelNo);
-    void                                                sendFrequencyFs(double dFrequencyFs_MHz);
+    void                                                sendFrequencyFs(double dFrequencyFs_Hz);
     void                                                sendSizeOfCoarseFFT(uint32_t u32SizeOfCoarseFFT_nSamp);
     void                                                sendSizeOfFineFFT(uint32_t u32FineFFTSize_nSamp);
     void                                                sendCoarseFFTShiftMask(int64_t i64Timestamp_us, uint32_t u32ShiftMask);

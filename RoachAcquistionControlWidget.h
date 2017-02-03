@@ -57,8 +57,8 @@ private:
     uint32_t                                                m_u32AccumulationLength_nFrames;
     double                                                  m_dSingleAccumulationLength_ms;
     uint32_t                                                m_u32CoarseChannelSelect;
-    double                                                  m_dCourseChannelSelectBaseband_MHz;
-    double                                                  m_dFrequencyFs_MHz;
+    double                                                  m_dCoarseChannelSelectBaseband_MHz;
+    double                                                  m_dFrequencyFs_Hz;
     uint32_t                                                m_u32SizeOfCoarseFFT_nSamp;
     uint32_t                                                m_u32SizeOfFineFFT_nSamp;
     uint32_t                                                m_u32CoarseFFTShiftMask;
@@ -102,7 +102,7 @@ private:
     void                                                    stokesEnabled_callback(bool bEnabled);
     void                                                    accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames);
     void                                                    coarseChannelSelect_callback(int64_t i64Timestamp_us, uint32_t u32ChannelNo);
-    void                                                    frequencyFs_callback(double dFrequencyFs_MHz);
+    void                                                    frequencyFs_callback(double dFrequencyFs_Hz);
     void                                                    sizeOfCoarseFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp);
     void                                                    sizeOfFineFFT_callback(uint32_t u32SizeOfFineFFT_nSamp);
     void                                                    coarseFFTShiftMask_callback(int64_t i64Timestamp_us, uint32_t u32ShiftMask);

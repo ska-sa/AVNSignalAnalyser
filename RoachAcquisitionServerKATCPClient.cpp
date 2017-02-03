@@ -553,7 +553,7 @@ void cRoachAcquisitionServerKATCPClient::sendCoarseChannelSelect(int64_t i64Time
     }
 }
 
-void cRoachAcquisitionServerKATCPClient::sendFrequencyFs(double dFrequencyFs_MHz)
+void cRoachAcquisitionServerKATCPClient::sendFrequencyFs(double dFrequencyFs_Hz)
 {
     boost::shared_lock<boost::shared_mutex> oLock;
 
@@ -563,13 +563,13 @@ void cRoachAcquisitionServerKATCPClient::sendFrequencyFs(double dFrequencyFs_MHz
     for(uint32_t ui = 0; ui < m_vpCallbackHandlers.size(); ui++)
     {
         cCallbackInterface *pHandler = dynamic_cast<cCallbackInterface*>(m_vpCallbackHandlers[ui]);
-        pHandler->frequencyFs_callback(dFrequencyFs_MHz);
+        pHandler->frequencyFs_callback(dFrequencyFs_Hz);
     }
 
     for(uint32_t ui = 0; ui < m_vpCallbackHandlers_shared.size(); ui++)
     {
         boost::shared_ptr<cCallbackInterface> pHandler = boost::dynamic_pointer_cast<cCallbackInterface>(m_vpCallbackHandlers_shared[ui]);
-        pHandler->frequencyFs_callback(dFrequencyFs_MHz);
+        pHandler->frequencyFs_callback(dFrequencyFs_Hz);
     }
 }
 
@@ -1012,14 +1012,14 @@ void cRoachAcquisitionServerKATCPClient::subscribeToSensors()
 {
     cout << "cRoachAcquisitionServerKATCPClient::subscribeToSensors(): Subscribing to sensors on KATCP server." << endl;
 
-    sendKATCPMessage(string("?sensor-sampling stationControllerConnected period 1000\n"));
+    //sendKATCPMessage(string("?sensor-sampling stationControllerConnected period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling actualAntennaAz period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling actualAntennaEl period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling actualSourceOffsetAz period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling actualSourceOffsetEl period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling frequencyRFChan0 period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling frequencyRFChan1 period 1000\n"));
-    sendKATCPMessage(string("?sensor-sampling roachConnected period 1000\n"));
+    sendKATCPMessage(string("?sensor-sampling roachConnected auto\n"));
     sendKATCPMessage(string("?sensor-sampling roachStokesEnabled period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling roachAccumulationLength period 1000\n"));
     sendKATCPMessage(string("?sensor-sampling roachCoarseChannelSelect period 1000\n"));

@@ -28,8 +28,8 @@ cRoachAcquistionControlWidget::cRoachAcquistionControlWidget(cPlotsWidget *pPlot
     m_u32AccumulationLength_nFrames(0),
     m_dSingleAccumulationLength_ms(0.0),
     m_u32CoarseChannelSelect(0),
-    m_dCourseChannelSelectBaseband_MHz(0.0),
-    m_dFrequencyFs_MHz(0.0),
+    m_dCoarseChannelSelectBaseband_MHz(0.0),
+    m_dFrequencyFs_Hz(0.0),
     m_u32SizeOfCoarseFFT_nSamp(0),
     m_u32SizeOfFineFFT_nSamp(0),
     m_u32CoarseFFTShiftMask(0),
@@ -344,23 +344,23 @@ void cRoachAcquistionControlWidget::coarseChannelSelect_callback(int64_t i64Time
 
     m_u32CoarseChannelSelect = u32ChannelNo;
 
-    m_dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
+    m_dCoarseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_Hz * 1e6 / 2);
 }
 
-void cRoachAcquistionControlWidget::frequencyFs_callback(double dFrequencyFs_MHz)
+void cRoachAcquistionControlWidget::frequencyFs_callback(double dFrequencyFs_Hz)
 {
     boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
 
-    m_dFrequencyFs_MHz = dFrequencyFs_MHz;
+    m_dFrequencyFs_Hz = dFrequencyFs_Hz;
 
-    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
+    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_Hz) * m_u32SizeOfCoarseFFT_nSamp;
     if(m_u32SizeOfFineFFT_nSamp)
     {
         m_dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
     }
     m_dSingleAccumulationLength_ms *= 1000;
 
-    m_dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
+    m_dCoarseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_Hz * 1e6 / 2);
 }
 
 void cRoachAcquistionControlWidget::sizeOfCoarseFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp)
@@ -369,14 +369,14 @@ void cRoachAcquistionControlWidget::sizeOfCoarseFFT_callback(uint32_t u32SizeOfC
 
     m_u32SizeOfCoarseFFT_nSamp = u32SizeOfCoarseFFT_nSamp;
 
-    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
+    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_Hz) * m_u32SizeOfCoarseFFT_nSamp;
     if(m_u32SizeOfFineFFT_nSamp)
     {
         m_dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
     }
     m_dSingleAccumulationLength_ms *= 1000;
 
-    m_dCourseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_MHz / 2);
+    m_dCoarseChannelSelectBaseband_MHz = (double)m_u32CoarseChannelSelect / (m_u32SizeOfCoarseFFT_nSamp / 2) * (m_dFrequencyFs_Hz * 1e6 / 2);
 }
 
 void cRoachAcquistionControlWidget::sizeOfFineFFT_callback(uint32_t u32SizeOfFineFFT_nSamp)
@@ -385,7 +385,7 @@ void cRoachAcquistionControlWidget::sizeOfFineFFT_callback(uint32_t u32SizeOfFin
 
     m_u32SizeOfFineFFT_nSamp = u32SizeOfFineFFT_nSamp;
 
-    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_MHz * 1e6) * m_u32SizeOfCoarseFFT_nSamp;
+    m_dSingleAccumulationLength_ms = 1 / (m_dFrequencyFs_Hz) * m_u32SizeOfCoarseFFT_nSamp;
     if(m_u32SizeOfFineFFT_nSamp)
     {
         m_dSingleAccumulationLength_ms *= m_u32SizeOfFineFFT_nSamp;
@@ -512,9 +512,9 @@ void cRoachAcquistionControlWidget::slotUpdateRoachGUIParameters()
     {
         m_pUI->label_coarseChannelSelect_binNo->setText(QString("%1").arg(m_u32CoarseChannelSelect));
 
-        m_pUI->label_coarseChannelSelect_baseband->setText(QString("%1 MHz").arg(m_dCourseChannelSelectBaseband_MHz));
+        m_pUI->label_coarseChannelSelect_baseband->setText(QString("%1 MHz").arg(m_dCoarseChannelSelectBaseband_MHz));
 
-        m_pUI->label_coarseChannelSelect_finalIF->setText(QString("%1 MHz").arg(m_dFrequencyFs_MHz - m_dCourseChannelSelectBaseband_MHz)); //Assume 2nd Nyquist zone
+        m_pUI->label_coarseChannelSelect_finalIF->setText(QString("%1 MHz").arg(m_dFrequencyFs_Hz - m_dCoarseChannelSelectBaseband_MHz)); //Assume 2nd Nyquist zone
 
         //TODO: Not sure if this is right way around relative to RF.
         //Presumably, the first mixing stage is low side injection so no spectral flipping.
@@ -523,7 +523,7 @@ void cRoachAcquistionControlWidget::slotUpdateRoachGUIParameters()
         //The correct way around. Hence simply add the coarse channel frequnecy offset.
         if(m_dFrequencyRFChan0_MHz)
         {
-            m_pUI->label_coarseChannelSelect_RF0->setText(QString("%1").arg(m_dFrequencyRFChan0_MHz - (m_dFrequencyFs_MHz / 4) + m_dCourseChannelSelectBaseband_MHz));
+            m_pUI->label_coarseChannelSelect_RF0->setText(QString("%1").arg(m_dFrequencyRFChan0_MHz - (m_dFrequencyFs_Hz / 4) + m_dCoarseChannelSelectBaseband_MHz));
         }
         else
         {
@@ -532,7 +532,7 @@ void cRoachAcquistionControlWidget::slotUpdateRoachGUIParameters()
 
         if(m_dFrequencyRFChan1_MHz)
         {
-            m_pUI->label_coarseChannelSelect_RF1->setText(QString("%1").arg(m_dFrequencyRFChan1_MHz - (m_dFrequencyFs_MHz / 4) + m_dCourseChannelSelectBaseband_MHz));
+            m_pUI->label_coarseChannelSelect_RF1->setText(QString("%1").arg(m_dFrequencyRFChan1_MHz - (m_dFrequencyFs_Hz / 4) + m_dCoarseChannelSelectBaseband_MHz));
         }
         else
         {
@@ -994,7 +994,7 @@ void cRoachAcquistionControlWidget::slotSendCoarseChannelSelect_baseband()
     uint32_t u32CoarseChannelSelect;
     {
         boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
-        u32CoarseChannelSelect = m_pUI->doubleSpinBox_coarseChannelFrequencyBaseband_MHz->value() * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+        u32CoarseChannelSelect = m_pUI->doubleSpinBox_coarseChannelFrequencyBaseband_MHz->value() * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_Hz / 2);
     }
 
     m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
@@ -1005,7 +1005,7 @@ void cRoachAcquistionControlWidget::slotSendCoarseChannelSelect_finalIF()
     uint32_t u32CoarseChannelSelect;
     {
         boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
-        u32CoarseChannelSelect = (m_dFrequencyFs_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyIF_MHz->value()) * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+        u32CoarseChannelSelect = (m_dFrequencyFs_Hz - m_pUI->doubleSpinBox_coarseChannelFrequencyIF_MHz->value()) * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_Hz / 2);
     }
 
     m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
@@ -1016,8 +1016,8 @@ void cRoachAcquistionControlWidget::slotSendCoarseChannelSelect_RF0()
     uint32_t u32CoarseChannelSelect;
     {
         boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
-        double dFrequencyBaseband = m_dFrequencyRFChan0_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyRF0_MHz->value() + (m_dFrequencyFs_MHz / 4);
-        u32CoarseChannelSelect = dFrequencyBaseband * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+        double dFrequencyBaseband = m_dFrequencyRFChan0_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyRF0_MHz->value() + (m_dFrequencyFs_Hz / 4);
+        u32CoarseChannelSelect = dFrequencyBaseband * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_Hz / 2);
     }
 
     m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);
@@ -1028,8 +1028,8 @@ void cRoachAcquistionControlWidget::slotSendCoarseChannelSelect_RF1()
     uint32_t u32CoarseChannelSelect;
     {
         boost::unique_lock<boost::mutex> oLock(m_oParameterMutex);
-        double dFrequencyBaseband = m_dFrequencyRFChan1_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyRF1_MHz->value() + (m_dFrequencyFs_MHz / 4);
-        u32CoarseChannelSelect = dFrequencyBaseband * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_MHz / 2);
+        double dFrequencyBaseband = m_dFrequencyRFChan1_MHz - m_pUI->doubleSpinBox_coarseChannelFrequencyRF1_MHz->value() + (m_dFrequencyFs_Hz / 4);
+        u32CoarseChannelSelect = dFrequencyBaseband * (m_u32SizeOfCoarseFFT_nSamp / 2) / (m_dFrequencyFs_Hz / 2);
     }
 
     m_pKATCPClient->requestRoachSetCoarseChannelSelect(u32CoarseChannelSelect);

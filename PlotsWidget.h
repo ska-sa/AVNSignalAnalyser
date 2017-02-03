@@ -91,7 +91,7 @@ private:
     void                                                    stokesEnabled_callback(bool bEnabled){}
     void                                                    accumulationLength_callback(int64_t i64Timestamp_us, uint32_t u32NFrames);
     void                                                    coarseChannelSelect_callback(int64_t i64Timestamp_us, uint32_t u32ChannelNo){}
-    void                                                    frequencyFs_callback(double dFrequencyFs_MHz){}
+    void                                                    frequencyFs_callback(double dFrequencyFs_Hz){}
     void                                                    sizeOfCoarseFFT_callback(uint32_t u32SizeOfCoarseFFT_nSamp){}
     void                                                    sizeOfFineFFT_callback(uint32_t u32FineFFTSize_nSamp){}
     void                                                    coarseFFTShiftMask_callback(int64_t i64Timestamp_us, uint32_t u32ShiftMask){}

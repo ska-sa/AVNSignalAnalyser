@@ -404,7 +404,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - LCP, RCP"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
-        m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
+        //m_pBandPowerPlotWidget->setYUnit(QString("dB/MHz"));
+        m_pBandPowerPlotWidget->setYUnit(QString("counts/MHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
         m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
@@ -456,7 +457,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - LCP, RCP, Q, U"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
-        m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
+        //m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
+        m_pBandPowerPlotWidget->setYUnit(QString("counts/kHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
         m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));
@@ -508,7 +510,8 @@ void cPlotsWidget::updatePlotType(uint16_t u16PlotType)
 
         m_pBandPowerPlotWidget->setTitle(QString("Band Power Density - LCP, RCP"));
         m_pBandPowerPlotWidget->setYLabel(QString("Power Density"));
-        m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
+        //m_pBandPowerPlotWidget->setYUnit(QString("dB/kHz"));
+        m_pBandPowerPlotWidget->setYUnit(QString("counts/kHz"));
         m_pBandPowerPlotWidget->setXLabel(QString("Timestamp"));
         m_pBandPowerPlotWidget->setXUnit(QString(""));
         m_pBandPowerPlotWidget->setSpanLengthControlScalingFactor(1.0, QString("s"));

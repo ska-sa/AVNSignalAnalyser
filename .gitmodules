@@ -1,21 +1,21 @@
 [submodule "AVNUtilLibs/Sockets"]
 	path = AVNUtilLibs/Sockets
-	url = ssh://git@brains/gitRepos/CPP/AVNUtilLibs/Sockets.git
+	url = git@github.com:ska-sa/AVNSockets.git
 [submodule "AVNUtilLibs/DataStructures"]
 	path = AVNUtilLibs/DataStructures
-	url = ssh://git@brains/gitRepos/CPP/AVNUtilLibs/DataStructures.git
+	url = git@github.com:ska-sa/AVNDataStructures.git
 [submodule "AVNAppLibs/SocketStreamers"]
 	path = AVNAppLibs/SocketStreamers
-	url = ssh://git@brains/gitRepos/CPP/AVNAppLibs/SocketStreamers.git
+	url = git@github.com:ska-sa/AVNSocketStreamers.git
 [submodule "AVNUtilLibs/Timestamp"]
 	path = AVNUtilLibs/Timestamp
-	url = ssh://git@brains/gitRepos/CPP/AVNUtilLibs/Timestamp.git
+	url = git@github.com:ska-sa/AVNTimestamp.git
 [submodule "AVNDataTypes/SpectrometerDataStream"]
 	path = AVNDataTypes/SpectrometerDataStream
-	url = ssh://git@brains/gitRepos/CPP/AVNDataTypes/SpectrometerDataStream.git
+	url = git@github.com:ska-sa/AVNSpectrometerDataStream.git
 [submodule "AVNGUILibs/QwtPlotting"]
 	path = AVNGUILibs/QwtPlotting
-	url = ssh://git@brains/gitRepos/CPP/AVNGUILibs/QwtPlotting.git
+	url = git@github.com:ska-sa/AVNQwtPlotting.git
 [submodule "AVNAppLibs/KATCP"]
 	path = AVNAppLibs/KATCP
-	url = ssh://git@brains/gitRepos/CPP/AVNAppLibs/KATCP.git
+	url = git@github.com:ska-sa/AVNKATCP.git

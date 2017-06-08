@@ -1,21 +1,21 @@
 [submodule "AVNUtilLibs/Sockets"]
 	path = AVNUtilLibs/Sockets
-	https://github.com:ska-sa/AVNSockets.git
+	url = https://github.com:ska-sa/AVNSockets.git
 [submodule "AVNUtilLibs/DataStructures"]
 	path = AVNUtilLibs/DataStructures
-	https://github.com:ska-sa/AVNDataStructures.git
+	url = https://github.com:ska-sa/AVNDataStructures.git
 [submodule "AVNAppLibs/SocketStreamers"]
 	path = AVNAppLibs/SocketStreamers
-	https://github.com:ska-sa/AVNSocketStreamers.git
+	url = https://github.com:ska-sa/AVNSocketStreamers.git
 [submodule "AVNUtilLibs/Timestamp"]
 	path = AVNUtilLibs/Timestamp
-	https://github.com:ska-sa/AVNTimestamp.git
+	url = https://github.com:ska-sa/AVNTimestamp.git
 [submodule "AVNDataTypes/SpectrometerDataStream"]
 	path = AVNDataTypes/SpectrometerDataStream
-	https://github.com:ska-sa/AVNSpectrometerDataStream.git
+	url = https://github.com:ska-sa/AVNSpectrometerDataStream.git
 [submodule "AVNGUILibs/QwtPlotting"]
 	path = AVNGUILibs/QwtPlotting
-	https://github.com:ska-sa/AVNQwtPlotting.git
+	url = https://github.com:ska-sa/AVNQwtPlotting.git
 [submodule "AVNAppLibs/KATCP"]
 	path = AVNAppLibs/KATCP
-	https://github.com:ska-sa/AVNKATCP.git
+	url = https://github.com:ska-sa/AVNKATCP.git
